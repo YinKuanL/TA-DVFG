@@ -1,0 +1,45 @@
+{
+  "generated_at_utc": "2026-07-04T09:06:06.544400+00:00",
+  "repo_root": "C:\\Users\\Yin Kuan\\OneDrive\\桌面\\Durham_CS\\Research\\TA-DVFG",
+  "git_hash": "unknown",
+  "command": "python experiments/final_claims_audit.py",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "selector_defaults": {
+    "topk_reliability_k": "5",
+    "adaptive_edge_budget": "15",
+    "adaptive_min_edges": "15",
+    "max_degree": "2",
+    "adaptive_min_gain": "0.0",
+    "topology_every": "20",
+    "pred_consensus_steps": "1",
+    "pred_self_weight": "0.85",
+    "vote_weighting": "topology_reliability",
+    "reliability_power": "1.0",
+    "topology_degree_power": "0.5",
+    "final_reliability_floor": "0.0",
+    "matched_edge_count": "5",
+    "canonical_adaptive_edge_budget": "15",
+    "canonical_adaptive_min_edges": "5",
+    "canonical_adaptive_min_gain": "0.001",
+    "canonical_max_degree": "2",
+    "canonical_pred_self_weight": "0.85",
+    "canonical_topk_reliability_k": "5",
+    "canonical_matched_edge_count": "5"
+  },
+  "movielens_protocol": {
+    "target": "binary preference, rating >= 4 is positive",
+    "split": "chronological 70% train, 10% validation, 20% test interactions",
+    "alignment": "all parties predict identical validation/test user-movie pairs",
+    "cross_party_messages": "prediction probabilities/logits only"
+  },
+  "hgb_weak_noisy_construction": {
+    "source": "main experiment/ta_dvfg_hgb_reliability.py::build_party_views",
+    "summary": "Useful parties receive feature splits and selected semantic/KNN graph views; hard-setting distractors receive permuted/noisy features and random graphs."
+  }
+}
