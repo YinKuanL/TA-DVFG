@@ -1,6 +1,8 @@
 name: Integrate accept evidence
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
 
@@ -34,9 +36,9 @@ jobs:
       - name: Commit source changes and delete temporary integration files
         run: |
           set -euxo pipefail
-          rm -f .github/workflows/integrate-accept-evidence.yml .integration-trigger .accept-evidence-push-trigger
+          rm -f .github/workflows/integrate-accept-evidence.yml .integration-trigger .accept-evidence-push-trigger .accept-evidence-push-trigger-2
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A paper/source/main.tex paper/source/supplementary.tex paper/source/ReproducibilityChecklist.tex .github/workflows/integrate-accept-evidence.yml .integration-trigger .accept-evidence-push-trigger
+          git add -A paper/source/main.tex paper/source/supplementary.tex paper/source/ReproducibilityChecklist.tex .github/workflows/integrate-accept-evidence.yml .integration-trigger .accept-evidence-push-trigger .accept-evidence-push-trigger-2
           git commit -m "Integrate MovieLens mechanism and pruning evidence"
           git push origin HEAD:integrate-accept-evidence-20260710
