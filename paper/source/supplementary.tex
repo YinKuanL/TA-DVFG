@@ -793,16 +793,14 @@ deployment requirements.
 
 The mechanism audit shows that active aggregation and party-local improvement
 depend on different components. We therefore compare topology objectives aligned
-with the intended deployment interface. These experiments use the strict
-active-party label-location protocol from
-Section~\ref{sec:supp-protocol}: only the active-party training code receives
-labels directly, while passive parties send train-node logits and receive
-logit-space gradients. This is an API-separation protocol, not a
+with the intended deployment interface. These experiments use the strict active-party label-location protocol: only the
+active-party training code receives labels directly, while passive parties send
+train-node logits and receive logit-space gradients. This is an API-separation protocol, not a
 label-confidentiality guarantee.
 
-Tables~\ref{tab:supp-objective-acm} and
-Table~\ref{tab:supp-objective-dblp} compare active, party-local, and joint topology
-objectives using the same all-party local-mean definition. Joint objectives use
+Tables~\ref{tab:supp-objective-acm} and~\ref{tab:supp-objective-dblp}
+compare active, party-local, and joint topology objectives using the same
+all-party local-mean definition. Joint objectives use
 \[
 s_{\mathrm{joint}}(E)=\lambda s_{\mathrm{active}}(E)
 +(1-\lambda)s_{\mathrm{local}}(E),
@@ -1458,8 +1456,8 @@ diagnostic. Additional failed gated/concatenation variants are preserved in the
 submitted package.
 
 \paragraph{Code availability and environment boundary.}
-The source code and experiment artifacts required for the reported analyses will
-be released publicly upon publication. The review package contains the raw
+All source code required to conduct and analyze the reported experiments will be
+released publicly upon publication. The review package contains the raw
 CSV/JSON outputs and referenced analysis paths. Exact GPU/CPU, operating-system,
 and package-version metadata are only partially preserved in the current
 artifact; we do not reconstruct or invent missing environment details.
