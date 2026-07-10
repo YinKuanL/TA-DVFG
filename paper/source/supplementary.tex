@@ -34,7 +34,6 @@
 \usepackage{array}
 \usepackage{placeins}
 \usepackage{dblfloatfix}
-\usepackage{balance}
 
 \pdfinfo{
 /TemplateVersion (2027.1)
@@ -93,7 +92,8 @@ changes local inference. A useful mental model is a consortium in which one
 coordinator needs an aggregate output while each member also operates a local
 downstream system. For example, a hospital registry may need one risk score
 while each hospital still needs an improved local alert; this is a motivating
-deployment pattern, not a claim that HGB or MovieLens instantiates that domain. The method does not provide a formal privacy guarantee
+deployment pattern, not a claim that HGB or MovieLens instantiates that domain.
+The method does not provide a formal privacy guarantee
 and is not presented as a fully serverless end-to-end VFGL protocol. The
 MovieLens 15-party Main and Hard settings are controlled stress constructions
 rather than naturally occurring 15-organization federations.
