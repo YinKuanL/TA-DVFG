@@ -1,0 +1,156 @@
+name: Final paper QA fix
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-validate-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Apply final QA fixes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('paper/source')
+          main_path = root / 'main.tex'
+          supp_path = root / 'supplementary.tex'
+          checklist_path = root / 'ReproducibilityChecklist.tex'
+          bib_path = root / 'references.bib'
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              count = text.count(old)
+              if count != 1:
+                  raise RuntimeError(f'{label}: expected exactly one match, found {count}')
+              return text.replace(old, new, 1)
+
+          main = main_path.read_text(encoding='utf-8')
+          main = replace_once(
+              main,
+              'Code and experiment artifacts required for the reported analyses will be\n'
+              'released publicly upon publication; the review package contains the referenced\n'
+              'analysis scripts and raw outputs.',
+              'All source code required to conduct and analyze the reported experiments will be\n'
+              'released publicly upon publication; the review package contains the referenced\n'
+              'analysis scripts and raw outputs.',
+              'main public-code commitment',
+          )
+          main_path.write_text(main, encoding='utf-8')
+
+          supp = supp_path.read_text(encoding='utf-8')
+          supp = replace_once(
+              supp,
+              'These experiments use the strict\n'
+              'active-party label-location protocol from\n'
+              'Section~\\ref{sec:supp-protocol}: only the active-party training code receives\n'
+              'labels directly, while passive parties send train-node logits and receive\n'
+              'logit-space gradients.',
+              'These experiments use the strict active-party label-location protocol: only the\n'
+              'active-party training code receives labels directly, while passive parties send\n'
+              'train-node logits and receive logit-space gradients.',
+              'supplement broken protocol cross-reference',
+          )
+          supp = replace_once(
+              supp,
+              'Tables~\\ref{tab:supp-objective-acm} and\n'
+              'Table~\\ref{tab:supp-objective-dblp} compare active, party-local, and joint topology\n'
+              'objectives using the same all-party local-mean definition.',
+              'Tables~\\ref{tab:supp-objective-acm} and~\\ref{tab:supp-objective-dblp}\n'
+              'compare active, party-local, and joint topology objectives using the same\n'
+              'all-party local-mean definition.',
+              'supplement table-reference grammar',
+          )
+          supp = replace_once(
+              supp,
+              'The source code and experiment artifacts required for the reported analyses will\n'
+              'be released publicly upon publication.',
+              'All source code required to conduct and analyze the reported experiments will be\n'
+              'released publicly upon publication.',
+              'supplement public-code commitment',
+          )
+          supp_path.write_text(supp, encoding='utf-8')
+
+          checklist = checklist_path.read_text(encoding='utf-8')
+          q45 = (
+              r'(\\question\{All source code required for conducting and analyzing the experiments '
+              r'will be made publicly available upon publication of the paper with a license that '
+              r'allows free usage for research purposes\}\{\(yes/partial/no\)\}\s*)'
+              r'(yes|partial|no)'
+          )
+          checklist, n45 = re.subn(q45, r'\1yes', checklist, count=1)
+          if n45 != 1:
+              raise RuntimeError(f'checklist 4.5: expected exactly one answer, found {n45}')
+
+          q48 = (
+              r'\\question\{This paper specifies the computing infrastructure used for running '
+              r'experiments \(hardware and software\), including GPU/CPU models; amount of memory; '
+              r'operating system; names and versions of relevant software libraries and frameworks'
+              r'\}\{\(yes/partial/no\)\}\s*(yes|partial|no)'
+          )
+          m48 = re.search(q48, checklist)
+          if not m48 or m48.group(1) != 'partial':
+              raise RuntimeError('checklist 4.8 must remain partial')
+          checklist_path.write_text(checklist, encoding='utf-8')
+
+          required = ('wolpert1992stacked', 'caruana2004ensemble', 'jacobs1991moe')
+          bib = bib_path.read_text(encoding='utf-8')
+          for key in required:
+              if f'{{{key},' not in bib:
+                  raise RuntimeError(f'missing BibTeX entry: {key}')
+              if f'\\cite{{{key}}}' not in main:
+                  raise RuntimeError(f'missing main-paper citation: {key}')
+
+          print('QA source fixes and consistency checks passed.')
+          PY
+
+      - name: Compile main paper, supplement, and checklist
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: |
+            main.tex
+            supplementary.tex
+            ReproducibilityChecklist.tex
+          working_directory: paper/source
+
+      - name: Reject unresolved citations or references
+        shell: bash
+        run: |
+          cd paper/source
+          for log in main.log supplementary.log ReproducibilityChecklist.log; do
+            test -f "$log" || { echo "Missing $log"; exit 1; }
+            if grep -Eiq 'Citation .* undefined|Reference .* undefined|There were undefined references|There were undefined citations' "$log"; then
+              echo "Unresolved citation/reference warning in $log"
+              grep -Ei 'Citation .* undefined|Reference .* undefined|There were undefined references|There were undefined citations' "$log" || true
+              exit 1
+            fi
+          done
+          test -f main.bbl || { echo 'Missing main.bbl'; exit 1; }
+          grep -q 'Wolpert' main.bbl
+          grep -q 'Caruana' main.bbl
+          grep -q 'Jacobs' main.bbl
+          echo 'Compilation QA passed.'
+
+      - name: Commit fixes and remove one-shot workflow
+        shell: bash
+        run: |
+          rm -f .github/workflows/final-paper-qa-fix.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add paper/source/main.tex \
+                  paper/source/supplementary.tex \
+                  paper/source/ReproducibilityChecklist.tex \
+                  .github/workflows/final-paper-qa-fix.yml
+          git commit -m 'Fix final paper QA issues'
+          git push origin HEAD:${{ github.head_ref }}
