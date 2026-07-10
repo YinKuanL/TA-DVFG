@@ -6,6 +6,9 @@ on:
       - claude-review-revision-20260710
     paths:
       - .github/workflows/validate-paper-revision.yml
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -19,26 +22,33 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: claude-review-revision-20260710
+      - name: Fix supplement source issues
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('paper/source/supplementary.tex')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('\\usepackage{balance}\n', '')
+          s = s.replace('deployment pattern, not a claim that HGB or MovieLens instantiates that domain. The method does not provide', 'deployment pattern, not a claim that HGB or MovieLens instantiates that domain.\nThe method does not provide')
+          s = s.replace('equivalence. Paired tests compare methods or protocol variants under shared', 'equivalence. Paired tests compare methods or protocol variants under shared')
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Compile main paper
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          working_directory: paper/source
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
       - name: Compile supplement
-        id: compile
-        continue-on-error: true
         uses: xu-cheng/latex-action@v4
         with:
           root_file: supplementary.tex
           working_directory: paper/source
           args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
-      - name: Capture compile diagnostics
-        run: |
-          if [ -f paper/source/supplementary.log ]; then
-            tail -n 120 paper/source/supplementary.log > supplement_compile_diagnostics.txt
-          else
-            echo "supplementary.log not found" > supplement_compile_diagnostics.txt
-          fi
-          echo "outcome=${{ steps.compile.outcome }}" >> supplement_compile_diagnostics.txt
-      - name: Commit diagnostics
+      - name: Commit source fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add supplement_compile_diagnostics.txt
-          git commit -m "Capture supplement compile diagnostics" || true
+          git add paper/source/supplementary.tex
+          git commit -m "Fix AAAI supplement compilation" || true
           git push origin HEAD:claude-review-revision-20260710
