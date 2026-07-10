@@ -1,0 +1,6 @@
+party,private_view,model_family,hidden_dim,graph_based,num_parameters
+rating_interaction_mf,train rating interaction graph,matrix factorization,64,True,651970
+user_profile_mlp,"age, gender, occupation",MLP + embedding,32,False,130402
+popularity_temporal_mlp,train-only popularity and temporal statistics,MLP,16,False,162
+movie_metadata_mlp,genres and release year,metadata MLP + embedding,128,False,825218
+genre_knn_mlp,genre semantic KNN graph,KNN-smoothed MLP,48,True,297938

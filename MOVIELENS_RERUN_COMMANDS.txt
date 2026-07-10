@@ -1,0 +1,34 @@
+Python executable:
+C:\Users\Yin Kuan\AppData\Local\Programs\Python\Python314\python.exe
+
+Syntax check:
+& 'C:\Users\Yin Kuan\AppData\Local\Programs\Python\Python314\python.exe' -m py_compile 'experiments\movielens\run_movielens_tadvfg.py' 'experiments\movielens\extended_movielens_suite.py' 'experiments\movielens\aggregate_15party.py' 'experiments\movielens\plot_movielens_results.py' 'experiments\movielens\prepare_movielens.py' 'experiments\movielens\package_final_results.py' 'models\movielens_parties.py'
+
+Archive old outputs:
+Copy outputs\movielens, outputs\movielens_main15, outputs\movielens_hard15, and outputs\movielens_final_package into outputs\movielens_archive_pre_leakage_safe_20260705\
+
+Five-party rerun:
+& 'C:\Users\Yin Kuan\AppData\Local\Programs\Python\Python314\python.exe' 'experiments\movielens\run_movielens_tadvfg.py' --data-dir 'data\movielens\ml-1m' --output-dir 'outputs\movielens_leakage_safe_20260705' --seeds 42,43,44,45,46 --num-parties 5 --setting five --local-epochs 8
+
+Extended five-party analysis:
+& 'C:\Users\Yin Kuan\AppData\Local\Programs\Python\Python314\python.exe' 'experiments\movielens\extended_movielens_suite.py' --output-dir 'outputs\movielens_leakage_safe_20260705'
+
+15-party Main rerun:
+& 'C:\Users\Yin Kuan\AppData\Local\Programs\Python\Python314\python.exe' 'experiments\movielens\run_movielens_tadvfg.py' --data-dir 'data\movielens\ml-1m' --output-dir 'outputs\movielens_main15_leakage_safe_20260705' --seeds 42,43,44,45,46 --setting main --local-epochs 8 --methods single_party_best,local_uniform_vote,local_reliability_vote,adaptive_graph_val,topk_reliability_vote,fixed_ring,random_matched,full_mesh,adaptive_pair,adaptive_complementarity,expander_matched --adaptive-edge-budget 15 --adaptive-min-edges 5 --matched-edge-count 5
+
+15-party Hard rerun:
+& 'C:\Users\Yin Kuan\AppData\Local\Programs\Python\Python314\python.exe' 'experiments\movielens\run_movielens_tadvfg.py' --data-dir 'data\movielens\ml-1m' --output-dir 'outputs\movielens_hard15_leakage_safe_20260705' --seeds 42,43,44,45,46 --setting hard --local-epochs 8 --methods single_party_best,local_uniform_vote,local_reliability_vote,adaptive_graph_val,topk_reliability_vote,fixed_ring,random_matched,full_mesh,adaptive_pair,adaptive_complementarity,expander_matched --adaptive-edge-budget 15 --adaptive-min-edges 5 --matched-edge-count 5
+
+15-party aggregation:
+& 'C:\Users\Yin Kuan\AppData\Local\Programs\Python\Python314\python.exe' 'experiments\movielens\aggregate_15party.py' --main-dir 'outputs\movielens_main15_leakage_safe_20260705' --hard-dir 'outputs\movielens_hard15_leakage_safe_20260705' --output-dir 'outputs\movielens_leakage_safe_20260705'
+
+Package timestamped outputs:
+& 'C:\Users\Yin Kuan\AppData\Local\Programs\Python\Python314\python.exe' 'experiments\movielens\package_final_results.py' --source-dir 'outputs\movielens_leakage_safe_20260705' --package-dir 'outputs\movielens_final_package_leakage_safe_20260705'
+
+Copy timestamped outputs to canonical paths:
+Copy outputs\movielens_leakage_safe_20260705 to outputs\movielens
+Copy outputs\movielens_main15_leakage_safe_20260705 to outputs\movielens_main15
+Copy outputs\movielens_hard15_leakage_safe_20260705 to outputs\movielens_hard15
+
+Regenerate canonical package:
+& 'C:\Users\Yin Kuan\AppData\Local\Programs\Python\Python314\python.exe' 'experiments\movielens\package_final_results.py' --source-dir 'outputs\movielens' --package-dir 'outputs\movielens_final_package'

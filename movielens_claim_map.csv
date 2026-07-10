@@ -1,0 +1,20 @@
+paper_location,metric_or_claim,old_value,new_value,raw_source,aggregation_script,status
+main_aaai27_alignment_submission_ready.tex macros,Best Single five-party ROC-AUC,0.7421,0.7402,outputs/movielens/movielens_tadvfg_summary.csv,experiments/movielens/run_movielens_tadvfg.py,PASS
+main_aaai27_alignment_submission_ready.tex macros,Global Top-k five-party ROC-AUC,0.7479,0.7487,outputs/movielens/movielens_tadvfg_summary.csv,experiments/movielens/run_movielens_tadvfg.py,PASS
+main_aaai27_alignment_submission_ready.tex macros,Adaptive Pairwise five-party ROC-AUC,0.7508,0.7510,outputs/movielens/movielens_tadvfg_summary.csv,experiments/movielens/run_movielens_tadvfg.py,PASS
+main_aaai27_alignment_submission_ready.tex macros,Full Mesh five-party ROC-AUC,0.7495,0.7497,outputs/movielens/movielens_tadvfg_summary.csv,experiments/movielens/run_movielens_tadvfg.py,PASS
+main_aaai27_alignment_submission_ready.tex macros,TA-DVFG five-party ROC-AUC,0.7512,0.7516,outputs/movielens/movielens_tadvfg_summary.csv,experiments/movielens/run_movielens_tadvfg.py,PASS
+main_aaai27_alignment_submission_ready.tex macros,Global Top-k five-party communication,0.80M,0.80M,outputs/movielens/movielens_tadvfg_summary.csv,experiments/movielens/extended_movielens_suite.py,PASS
+main_aaai27_alignment_submission_ready.tex macros,Adaptive Pairwise five-party communication,5.20M,5.20M,outputs/movielens/movielens_tadvfg_summary.csv,experiments/movielens/extended_movielens_suite.py,PASS
+main_aaai27_alignment_submission_ready.tex macros,Full Mesh five-party communication,10.00M,10.00M,outputs/movielens/movielens_tadvfg_summary.csv,experiments/movielens/extended_movielens_suite.py,PASS
+main_aaai27_alignment_submission_ready.tex macros,TA-DVFG five-party communication,3.20M,3.20M,outputs/movielens/movielens_tadvfg_summary.csv,experiments/movielens/extended_movielens_suite.py,PASS
+main_aaai27_alignment_submission_ready.tex Table MovieLens,15-party Main TA-DVFG AUC,0.7511,0.7516,outputs/movielens/movielens_15party_summary.csv,experiments/movielens/aggregate_15party.py,PASS
+main_aaai27_alignment_submission_ready.tex Table MovieLens,15-party Main TA-DVFG links,5.4,5.2,outputs/movielens/movielens_15party_summary.csv,experiments/movielens/aggregate_15party.py,PASS
+main_aaai27_alignment_submission_ready.tex Table MovieLens,15-party Hard TA-DVFG AUC,0.7491,0.7498,outputs/movielens/movielens_15party_summary.csv,experiments/movielens/aggregate_15party.py,PASS
+main_aaai27_alignment_submission_ready.tex Table MovieLens,15-party Hard TA-DVFG links,5.0,5.0,outputs/movielens/movielens_15party_summary.csv,experiments/movielens/aggregate_15party.py,PASS
+main_aaai27_alignment_submission_ready.tex Table MovieLens,15-party Main Full Mesh AUC,0.7455,0.7457,outputs/movielens/movielens_15party_summary.csv,experiments/movielens/aggregate_15party.py,PASS
+main_aaai27_alignment_submission_ready.tex Table MovieLens,15-party Hard Full Mesh AUC,0.7427,0.7435,outputs/movielens/movielens_15party_summary.csv,experiments/movielens/aggregate_15party.py,PASS
+main_aaai27_alignment_submission_ready.tex Table MovieLens,15-party Full Mesh links,105.0,105.0,outputs/movielens/movielens_15party_per_seed.csv,experiments/movielens/aggregate_15party.py,PASS
+Collaboration_without_Representation_Alignment_supplement_fixed.tex Table S MovieLens,Five-party summary values,stale 2026-07-04 values,updated 2026-07-05 values,outputs/movielens/movielens_tadvfg_summary.csv,experiments/movielens/extended_movielens_suite.py,PASS
+Collaboration_without_Representation_Alignment_supplement_fixed.tex Table S MovieLens,15-party Main/Hard values,stale 2026-07-04 values,updated 2026-07-05 values,outputs/movielens/movielens_15party_summary.csv,experiments/movielens/aggregate_15party.py,PASS
+repository-wide stale draft audit,Old MovieLens numeric literals in noncanonical drafts,present,present in multiple historical .tex drafts,rg global search,manual audit,FAIL_NONCANONICAL_DRAFTS_REMAIN

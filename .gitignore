@@ -1,15 +1,46 @@
+# Python caches and local environments
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
 .venv/
 venv/
+
+# Local secrets and connector configuration
+.codex/config.toml
+*.overleaf-token
+projects.json
+
+# Local build and temporary outputs
+build/
+tmp/
+*.log
+texput.log
+
+# Downloaded datasets and reconstructible local data
 data/
 data_hgb/
 data_acm/
-outputs/
+acm/
+
+# Large generated outputs and caches are ignored by default.
+# Compact paper evidence is force-added selectively.
 results/
+outputs/
+
+# Model/checkpoint/cache binaries
 *.pt
 *.pth
 *.pkl
+*.npz
+*.mat
+
+# Local packaging or duplicate clones
+github_upload_TA_DVFG/
+multi-modalities/
+supplement_experiment_code/
+
+# Historical paper/package binaries kept locally unless explicitly selected
 *.zip
-*.log
+*.docx

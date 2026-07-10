@@ -1,9 +1,0 @@
-numpy
-pandas
-scipy
-scikit-learn
-torch
-torch-geometric
-matplotlib
-ogb
-openpyxl

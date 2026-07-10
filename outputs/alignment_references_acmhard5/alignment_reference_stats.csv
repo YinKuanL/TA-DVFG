@@ -1,0 +1,10 @@
+dataset,setting,method,n,mean_delta_vs_tadvfg,ci95_low,ci95_high,cohen_dz,wilcoxon_note
+ACM,hard,Best Single,5,-0.028006601333618163,-0.03826851157046067,-0.017744691096775653,-2.3922318436328855,not run: scipy not required; with pilot n=1 this is not interpretable
+ACM,hard,Full Mesh prediction consensus,5,-0.0777594804763794,-0.09228635763139473,-0.06323260332136407,-4.691936821304172,not run: scipy not required; with pilot n=1 this is not interpretable
+ACM,hard,Gated Fusion,5,-0.42833609580993653,-0.4578950816606528,-0.3987771099592203,-12.701827588258457,not run: scipy not required; with pilot n=1 this is not interpretable
+ACM,hard,Global Top-k Reliability,5,0.005930781364440918,-0.0020833773348688,0.013944940063750636,0.6486718405457425,not run: scipy not required; with pilot n=1 this is not interpretable
+ACM,hard,Project-and-Concat,5,-0.43327842354774476,-0.44432328901245055,-0.422233558083039,-34.385686674265344,not run: scipy not required; with pilot n=1 this is not interpretable
+ACM,hard,Project-and-Mean,5,-0.2619439959526062,-0.2794819181092641,-0.24440607379594834,-13.091860814425804,not run: scipy not required; with pilot n=1 this is not interpretable
+ACM,hard,Reliability-Selected Gated Fusion,5,-0.29456342458724977,-0.3140286713284275,-0.27509817784607205,-13.264472273561825,not run: scipy not required; with pilot n=1 this is not interpretable
+ACM,hard,Reliability-Selected Project-and-Mean,5,-0.08500823974609376,-0.09888165783596298,-0.07113482165622453,-5.3709191911832255,not run: scipy not required; with pilot n=1 this is not interpretable
+ACM,hard,Useful-Only best latent fusion,5,0.03327841758728027,0.02567824602909442,0.04087858914546612,3.8380474583926114,not run: scipy not required; with pilot n=1 this is not interpretable

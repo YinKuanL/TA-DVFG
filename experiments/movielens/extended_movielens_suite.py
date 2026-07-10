@@ -17,6 +17,9 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import pandas as pd
+import matplotlib
+
+matplotlib.use("Agg")
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -290,24 +293,52 @@ def write_pareto_and_stats(output_dir: Path, per_seed: pd.DataFrame, summary: pd
 
 def plot_pareto(output_dir: Path, pareto: pd.DataFrame) -> None:
     import matplotlib.pyplot as plt
-    from matplotlib.lines import Line2D
 
     plt.rcParams.update({
-        "font.size": 13,
-        "axes.titlesize": 14,
-        "axes.labelsize": 13,
-        "xtick.labelsize": 11,
-        "ytick.labelsize": 11,
-        "legend.fontsize": 9,
+        "font.size": 9,
+        "axes.titlesize": 10,
+        "axes.labelsize": 9,
+        "xtick.labelsize": 8,
+        "ytick.labelsize": 8,
+        "legend.fontsize": 8,
     })
     fig, ax = plt.subplots(figsize=(5.0, 3.25))
+    table_panel_methods = [
+        "Best Single",
+        "Global Top-k",
+        "Adaptive Pairwise",
+        "Full Mesh",
+        "TA-DVFG",
+    ]
+    plot_df = pareto[pareto["Method"].isin(table_panel_methods)].copy()
     key_offsets = {
         "Best Single": (8, 8),
-        "Global Top-k": (8, 8),
-        "TA-DVFG": (8, 8),
-        "Full Mesh": (8, 8),
+        "Global Top-k": (9, 10),
+        "Adaptive Pairwise": (0, -14),
+        "TA-DVFG": (-8, 8),
+        "Full Mesh": (-12, 13),
     }
-    for _, row in pareto.iterrows():
+    key_align = {
+        "Best Single": ("left", "bottom"),
+        "Global Top-k": ("left", "bottom"),
+        "Adaptive Pairwise": ("center", "top"),
+        "TA-DVFG": ("right", "bottom"),
+        "Full Mesh": ("right", "bottom"),
+    }
+    key_markers = {
+        "Best Single": "o",
+        "Global Top-k": "D",
+        "Adaptive Pairwise": "s",
+        "Full Mesh": "^",
+        "TA-DVFG": "o",
+    }
+    label_bbox = {
+        "boxstyle": "round,pad=0.12",
+        "facecolor": "white",
+        "edgecolor": "none",
+        "alpha": 0.78,
+    }
+    for _, row in plot_df.iterrows():
         color = "#d62728" if row["Method"] == "TA-DVFG" else ("#1f77b4" if row["pareto_optimal"] else "#777777")
         comm_m = row["total_comm_mean"] / 1_000_000
         comm_std_m = row["total_comm_std"] / 1_000_000
@@ -316,39 +347,30 @@ def plot_pareto(output_dir: Path, pareto: pd.DataFrame) -> None:
             row["auc_mean"],
             xerr=comm_std_m,
             yerr=row["auc_std"],
-            fmt="o",
+            fmt=key_markers[row["Method"]],
             capsize=3,
             color=color,
+            markersize=5.5 if row["Method"] == "TA-DVFG" else 5.0,
         )
-        if row["Method"] in key_offsets:
-            ax.annotate(
-                row["Method"],
-                (comm_m, row["auc_mean"]),
-                xytext=key_offsets[row["Method"]],
-                textcoords="offset points",
-                fontsize=10,
-            )
-    ax.set_xlim(-0.25, 10.9)
+        ha, va = key_align[row["Method"]]
+        ax.annotate(
+            row["Method"],
+            (comm_m, row["auc_mean"]),
+            xytext=key_offsets[row["Method"]],
+            textcoords="offset points",
+            fontsize=8,
+            ha=ha,
+            va=va,
+            bbox=label_bbox,
+            zorder=5,
+        )
+    ax.set_xlim(-0.25, 11.2)
+    ax.set_ylim(0.7348, 0.7540)
     ax.set_xlabel("Total prediction communication (M scalars)")
     ax.set_ylabel("ROC-AUC")
     ax.set_title("MovieLens AUC-communication Pareto")
     ax.grid(alpha=0.25)
-    handles = [
-        Line2D([0], [0], marker="o", color="none", markerfacecolor="#d62728", markeredgecolor="#d62728", markersize=7, label="TA-DVFG"),
-        Line2D([0], [0], marker="o", color="none", markerfacecolor="#1f77b4", markeredgecolor="#1f77b4", markersize=7, label="Pareto reference"),
-        Line2D([0], [0], marker="o", color="none", markerfacecolor="#777777", markeredgecolor="#777777", markersize=7, label="Other baseline"),
-    ]
-    ax.legend(
-        handles=handles,
-        loc="lower right",
-        ncol=1,
-        frameon=True,
-        framealpha=0.92,
-        borderpad=0.35,
-        handletextpad=0.35,
-        labelspacing=0.25,
-    )
-    fig.tight_layout()
+    fig.tight_layout(pad=0.35)
     fig.savefig(output_dir / "movielens_pareto_auc_communication.png", dpi=240)
     plt.close(fig)
 

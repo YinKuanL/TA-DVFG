@@ -1,0 +1,11 @@
+method,interface_class,centralized_collection_required,shared_projection_interface_required,sparse_p2p_deployment_supported,party_local_post_consensus_readout_supported,deployable_main_baseline
+Best Single,prediction-space reference,True,False,False,False,True
+Global Top-k Reliability,prediction-space reference,True,False,False,False,True
+Full Mesh prediction consensus,prediction-space reference,True,False,False,False,True
+TA-DVFG,prediction-space reference,False,False,True,True,True
+Project-and-Mean,centralized stronger-information latent alignment,True,True,False,False,True
+Reliability-Selected Project-and-Mean,centralized stronger-information latent alignment,True,True,False,False,True
+Reliability-Selected Gated Fusion,centralized stronger-information latent alignment,True,True,False,False,True
+Useful-Only best latent fusion,diagnostic oracle,True,True,False,False,False
+Project-and-Concat,centralized stronger-information latent alignment,True,True,False,False,True
+Gated Fusion,centralized stronger-information latent alignment,True,True,False,False,True

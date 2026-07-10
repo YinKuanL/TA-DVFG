@@ -1,76 +1,54 @@
-# TA-DVFG Supplement Experiment Code
+# TA-DVFG
 
-This folder contains the cleaned experiment code used for the paper results.
-It excludes raw datasets, caches, Python bytecode, temporary files, and LaTeX.
+TA-DVFG studies sparse prediction-topology learning for vertical graph views. The current paper frames the method as collaboration without representation alignment: parties keep local representations private, exchange aligned prediction probabilities, and select a sparse communication graph using validation reliability and graph-level utility.
 
-## Contents
+## Repository Structure
 
-- `main experiment/ta_dvfg_hgb_reliability.py`: core TA-DVFG HGB engine.
-- `experiments/`: experiment runners, audits, aggregation, and plotting scripts.
-- `experiments/movielens/`: MovieLens 1M experiment suite.
-- `models/movielens_parties.py`: heterogeneous MovieLens local predictors.
-- `tests/`: lightweight protocol tests.
-- `metadata/`: small config/result provenance files.
-
-## Setup
-
-Use Python 3.9+.
-
-```bash
-pip install -r requirements.txt
+```text
+main experiment/              Core HGB TA-DVFG implementation
+experiments/                  Experiment runners, audits, aggregation scripts
+experiments/movielens/        MovieLens real-world experiment suite
+models/                       MovieLens party models
+scripts/                      PowerShell and shell entry points
+data_hgb/                     HGB-derived local data
+data/                         MovieLens and other local data
+results/                      HGB experiment outputs and summaries
+outputs/                      Closure audits, MovieLens outputs, paper packages
+figures/                      Paper-facing figures copied from final outputs
+docs/                         Control documents and repository manifest
+paper/                        Local paper-control notes; current paper source is Overleaf
 ```
 
-The HGB experiments require PyTorch Geometric dataset access. MovieLens requires
-MovieLens 1M under `data/movielens/ml-1m/`.
+## Current Paper Source
 
-## Main Commands
+The latest Overleaf project contains `main.tex`, `supplementary.tex`, `ReproducibilityChecklist.tex`, and `CameraReady2027.tex`.
 
-HGB cached core:
+- `main.tex` is the real main paper compile root.
+- `supplementary.tex` is a standalone supplement.
+- `ReproducibilityChecklist.tex` is standalone/input-guarded but is not included by current `main.tex`.
+- `CameraReady2027.tex` is an AAAI formatting-instructions template and does not wrap `main.tex`.
 
-```bash
-python experiments/run_cached_core.py --datasets ACM DBLP IMDB --seeds 42,43,44,45,46
-```
+## Core Method Code
 
-HGB K sensitivity:
+- HGB and cached topology experiments: `main experiment/ta_dvfg_hgb_reliability.py`
+- General experiment matrix: `experiments/run_experiments.py`
+- Cached core: `experiments/run_cached_core.py`
+- Cached ablations: `experiments/run_cached_ablations.py`
+- MovieLens suite: `experiments/movielens/run_movielens_tadvfg.py`
 
-```bash
-python experiments/run_k_sensitivity.py
-```
+## Important Evidence
 
-Nested weak-party scaling:
+The current paper evidence is retained in place. Key locations include:
 
-```bash
-python experiments/run_nested_weak_scaling.py
-```
+- HGB cached core tables: `results/core_cached_v2/`
+- HGB reusable prediction caches: `results/core_cache_v2/`
+- Mechanism and communication analyses: `results/combined/`, `results/topology_objective/`, `results/edge_budget/`, `results/consensus/`, `results/deployment_objective/`
+- Reviewer protocol audits: `results/active_party_protocol/`, `results/validation_label_budget/`, `results/topology_frequency/`, `results/strict_label_training/`, `results/party_scalability/`, `results/strong_setting/`
+- K sensitivity and nested weak-party scaling: `results/k_sensitivity_runs/`, `results/nested_weak_scaling/`
+- Minimum-link audit: `results/minedge_sweep/`, `outputs/minimum_link_audit/`
+- MovieLens final evidence: `outputs/movielens/`, `outputs/movielens_main15/`, `outputs/movielens_hard15/`, `outputs/movielens_final_package/`
+- Stronger-information alignment references: `outputs/alignment_references_acmhard5/`
 
-ACM/DBLP alignment references:
+## Reproduction
 
-```bash
-python experiments/alignment_references.py --dataset ACM --setting hard --seeds 42,43,44,45,46
-python experiments/alignment_references.py --dataset DBLP --setting hard --seeds 42,43,44,45,46
-```
-
-MovieLens 1M:
-
-```bash
-python experiments/movielens/prepare_movielens.py --data-dir data/movielens
-python experiments/movielens/run_movielens_tadvfg.py --data-dir data/movielens/ml-1m --output-dir outputs/movielens --seeds 42,43,44,45,46 --num-parties 5 --setting five --local-epochs 8
-python experiments/movielens/run_movielens_tadvfg.py --data-dir data/movielens/ml-1m --output-dir outputs/movielens_main15 --seeds 42,43,44,45,46 --setting main --local-epochs 8
-python experiments/movielens/run_movielens_tadvfg.py --data-dir data/movielens/ml-1m --output-dir outputs/movielens_hard15 --seeds 42,43,44,45,46 --setting hard --local-epochs 8
-```
-
-Final aggregation/audit:
-
-```bash
-python experiments/final_analysis.py
-python experiments/config_audit.py
-python experiments/final_claims_audit.py
-```
-
-## Notes
-
-- Seeds used in the paper are `42,43,44,45,46`.
-- MovieLens target construction uses MovieLens 1M observed ratings only:
-  `rating >= 4` is positive; ratings `1--3` are negative; no negative sampling.
-- MovieLens split is chronological 70/10/20 over observed interactions.
-- Test labels are used only for final reporting.
+Use `REPRODUCE.md` for the paper experiment map, canonical entry scripts, expected outputs, and caveats. This cleanup did not rerun experiments or regenerate evidence.

@@ -105,17 +105,17 @@ Use these in appendix/supplement:
 
 Five-party MovieLens:
 
-- TA-DVFG ROC-AUC: 0.7512.
-- Full Mesh ROC-AUC: 0.7495.
-- Adaptive Pairwise ROC-AUC: 0.7508.
+- TA-DVFG ROC-AUC: 0.7516.
+- Full Mesh ROC-AUC: 0.7497.
+- Adaptive Pairwise ROC-AUC: 0.7510.
 - TA-DVFG uses 3.20M total prediction communication versus 10.00M for Full Mesh.
 - Mean communication reduction versus Full Mesh: 68.0%.
 - Mean communication reduction versus Adaptive Pairwise: 38.5%.
 
 15-party MovieLens:
 
-- Main: TA-DVFG AUC 0.7511 with 5.4 links; Full Mesh AUC 0.7455 with 105 links.
-- Hard: TA-DVFG AUC 0.7491 with 5.0 links; Full Mesh AUC 0.7427 with 105 links.
+- Main: TA-DVFG AUC 0.7516 with 5.2 links; Full Mesh AUC 0.7457 with 105 links.
+- Hard: TA-DVFG AUC 0.7498 with 5.0 links; Full Mesh AUC 0.7435 with 105 links.
 - Full Mesh edge count was verified as 105 in both 15-party settings.
 
 ## Claims Supported By Completed Runs

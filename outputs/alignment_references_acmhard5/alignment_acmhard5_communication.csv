@@ -1,0 +1,11 @@
+dataset,setting,method,selected_party_count,trainable_fusion_parameters,hidden_state_inference_payload_scalars_per_target,prediction_inference_payload_scalars_per_run,training_payload_scalars_if_hidden_cached,centralized_collection_required,shared_projection_interface_required,sparse_p2p_deployment_supported,party_local_post_consensus_readout_supported,diagnostic_only
+ACM,hard,Best Single,,0,0,9075,0,True,False,False,False,False
+ACM,hard,Global Top-k Reliability,,0,0,45375,0,True,False,False,False,False
+ACM,hard,Full Mesh prediction consensus,,0,0,1905750,0,True,False,False,False,False
+ACM,hard,TA-DVFG,,0,0,90750,0,False,False,True,True,False
+ACM,hard,Project-and-Mean,15,32259,480,0,2904000,True,True,False,False,False
+ACM,hard,Reliability-Selected Project-and-Mean,5,10819,160,0,968000,True,True,False,False,False
+ACM,hard,Reliability-Selected Gated Fusion,5,10664,160,0,968000,True,True,False,False,False
+ACM,hard,Useful-Only best latent fusion,3,6531,96,0,580800,True,True,False,False,True
+ACM,hard,Project-and-Concat,15,124099,960,0,2904000,True,True,False,False,False
+ACM,hard,Gated Fusion,15,127122,1920,0,2904000,True,True,False,False,False

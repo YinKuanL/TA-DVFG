@@ -1,0 +1,4 @@
+Method,ROC-AUC,Communication,Extra parameters,Hidden exchange?,Alignment training?
+Reliability Vote,0.7497474940450205,2000420.0,0,No,No
+Full Mesh,0.7497198728530706,10002100.0,0,No,No
+TA-DVFG,0.751625019233409,3200672.0,0,No,No

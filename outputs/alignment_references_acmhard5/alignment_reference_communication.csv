@@ -1,0 +1,11 @@
+dataset,setting,method,original_hidden_dims,d_ref,param_count,one_time_hidden_cache_payload_scalars,per_inference_projected_payload_scalars,centralized_fusion_required,party_local_post_consensus_supported
+ACM,hard,Best Single,N/A,N/A,0,N/A,0,False,False
+ACM,hard,Full Mesh prediction consensus,N/A,N/A,0,N/A,0,False,False
+ACM,hard,Gated Fusion,"[64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64]",128,127122,2904000,1920,True,False
+ACM,hard,Global Top-k Reliability,N/A,N/A,0,N/A,0,False,False
+ACM,hard,Project-and-Concat,"[64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64]",64,124099,2904000,960,True,False
+ACM,hard,Project-and-Mean,"[64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64]",32,32259,2904000,480,True,False
+ACM,hard,Reliability-Selected Gated Fusion,"[64, 64, 64, 64, 64]",32,10664,968000,160,True,False
+ACM,hard,Reliability-Selected Project-and-Mean,"[64, 64, 64, 64, 64]",32,10819,968000,160,True,False
+ACM,hard,TA-DVFG,N/A,N/A,0,N/A,0,False,True
+ACM,hard,Useful-Only best latent fusion,"[64, 64, 64]",32,6531,580800,96,True,False

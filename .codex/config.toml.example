@@ -1,0 +1,12 @@
+# Example only. The setup script generates .codex/config.toml for Windows.
+# Do not commit credentials.
+
+[mcp_servers.overleaf]
+command = "cmd"
+args = ["/c", "npx", "-y", "@mjyoo2/overleaf-mcp"]
+default_tools_approval_mode = "writes"
+enabled = true
+
+[mcp_servers.overleaf.env]
+OVERLEAF_PROJECT_ID = "YOUR_PROJECT_ID"
+OVERLEAF_GIT_TOKEN_FILE = "C:\\Users\\YOUR_NAME\\AppData\\Roaming\\overleaf-mcp\\tokens\\project-token.txt"

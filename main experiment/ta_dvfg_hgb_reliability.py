@@ -922,6 +922,7 @@ def compute_party_reliabilities(
         raise ValueError(f"Unknown evaluator mode: {evaluator_mode}")
     if evaluator_mode == "active_party" and not 0 <= active_party_id < len(val_probs_by_party):
         raise ValueError("--active_party_id must identify an existing party")
+    # Eq. (3): validation accuracy defines each party reliability r_i.
     return [
         float((prob.argmax(dim=1) == y_val).float().mean().item())
         for prob in val_probs_by_party
@@ -1031,6 +1032,7 @@ def topology_filtered_reliability_vote(
     rel_power = getattr(args, "reliability_power", 1.0)
     deg_power = getattr(args, "topology_degree_power", 0.5)
     raw_weights = []
+    # Eq. (6): active readout weights selected parties by reliability and topology degree.
     for i in active:
         rel = max(float(reliabilities[i]), 1e-3) ** rel_power
         topo = max(float(degree[i]) + 1.0, 1.0) ** deg_power
@@ -1071,6 +1073,7 @@ def post_consensus_party_probs(
             if not neigh:
                 new_probs.append(current[i])
                 continue
+            # Eqs. (4)-(5): one prediction-consensus step mixes local and neighbor probabilities.
             w = torch.tensor([max(float(reliabilities[j]), 1e-3) for j in neigh], dtype=current[i].dtype, device=current[i].device)
             w = w / w.sum().clamp_min(1e-12)
             neigh_prob = sum(wj * current[j] for wj, j in zip(w, neigh))
@@ -1289,12 +1292,15 @@ def score_topology_on_validation(
         args,
     )
     if objective == "active":
+        # Eq. (7): active deployment objective.
         return float(components["active"])
     if objective == "local_mean":
+        # Eq. (8): local deployment objective.
         return float(components["local_mean"])
     lam = float(getattr(args, "joint_lambda", 0.5))
     if not 0.0 <= lam <= 1.0:
         raise ValueError("--joint_lambda must be in [0, 1]")
+    # Eq. (9): joint active/local deployment objective.
     return float(lam * components["active"] + (1.0 - lam) * components["local_mean"])
 
 
@@ -2020,6 +2026,7 @@ def update_adaptive_topology_from_cache(
     adj = np.zeros((n, n), dtype=np.float32)
     degree = np.zeros(n, dtype=np.int32)
     topology_eval_count = 0
+    # Algorithm 1 / S1: greedily evaluate feasible one-edge extensions on validation labels.
     def val_score(candidate_adj: np.ndarray) -> float:
         return score_topology_on_validation(
             candidate_adj,

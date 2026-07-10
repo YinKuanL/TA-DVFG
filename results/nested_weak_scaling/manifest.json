@@ -1,0 +1,34 @@
+{
+  "generated_at_utc": "2026-07-05T03:46:20.437666+00:00",
+  "git_hash": "unknown",
+  "command": "python experiments/run_nested_weak_scaling.py",
+  "datasets": [
+    "ACM",
+    "DBLP"
+  ],
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "weak_counts": [
+    0,
+    2,
+    5,
+    10,
+    15
+  ],
+  "methods": [
+    "single_party_best",
+    "topk_reliability_vote",
+    "random_matched",
+    "adaptive_pair",
+    "adaptive_complementarity",
+    "full_mesh",
+    "adaptive_graph_val"
+  ],
+  "cache_protocol": "train/load 18-party hard cache with 3 useful + 15 weak, then replay nested subsets",
+  "test_label_rule": "test labels are used only inside existing post-hoc evaluation, never for topology selection"
+}

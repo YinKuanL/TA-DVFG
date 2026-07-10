@@ -1,0 +1,22 @@
+# Best Matched Selection Report
+
+Status: **BLOCKING LABEL ISSUE FOUND**
+
+Two code paths exist:
+
+1. `best_matched_sparse` in the HGB engine chooses among Ring/Random/Expander matched topologies using validation score at each epoch. This is validation-only.
+2. The paper grouped table in `experiments/final_analysis.py` constructs `Best Matched Sparse` by taking `idxmax()` over `test_at_best_val_mean` among fixed matched controls per dataset/setting. This is a post-hoc test-mean envelope.
+
+Therefore, if the grouped paper row is used, it should be relabeled `Oracle Best Matched` and described as a post-hoc upper envelope over Ring/Random/Expander matched controls.
+
+## Per-Setting Selection
+
+```csv
+dataset,setting,reported_best_matched_family,reported_best_matched_method,reported_value_mean,reported_value_std,selection_basis_for_paper_grouped_table,choice_granularity_for_paper_grouped_table,per_seed_test_oracle_family_if_selected_per_seed,engine_best_matched_sparse_available,engine_best_matched_rule,source_code_path,audit_conclusion
+ACM,main,Expander Matched,expander_matched,0.6935749471187591,0.197954242617924,post-hoc test_at_best_val_mean envelope over fixed_ring_matched/random_matched/expander_matched,per dataset/setting,42:Expander Matched;43:Expander Matched;44:Expander Matched;45:Ring Matched;46:Random Matched,False,not present in core headline metrics,"experiments/final_analysis.py:449-475,504-507,1020-1025; main experiment/ta_dvfg_hgb_reliability.py:2086-2105",Case B for paper grouped row: post-hoc test-mean envelope; relabel as Oracle Best Matched or replace with predeclared fixed control.
+ACM,hard_noisy,Expander Matched,expander_matched,0.6283360600471497,0.145231903101013,post-hoc test_at_best_val_mean envelope over fixed_ring_matched/random_matched/expander_matched,per dataset/setting,42:Expander Matched;43:Expander Matched;44:Expander Matched;45:Ring Matched;46:Random Matched,False,not present in core headline metrics,"experiments/final_analysis.py:449-475,504-507,1020-1025; main experiment/ta_dvfg_hgb_reliability.py:2086-2105",Case B for paper grouped row: post-hoc test-mean envelope; relabel as Oracle Best Matched or replace with predeclared fixed control.
+DBLP,main,Random Matched,random_matched,0.8474201321601867,0.0758867780670656,post-hoc test_at_best_val_mean envelope over fixed_ring_matched/random_matched/expander_matched,per dataset/setting,42:Expander Matched;43:Expander Matched;44:Expander Matched;45:Random Matched;46:Random Matched,False,not present in core headline metrics,"experiments/final_analysis.py:449-475,504-507,1020-1025; main experiment/ta_dvfg_hgb_reliability.py:2086-2105",Case B for paper grouped row: post-hoc test-mean envelope; relabel as Oracle Best Matched or replace with predeclared fixed control.
+DBLP,hard_noisy,Expander Matched,expander_matched,0.6636363565921783,0.2749487783102511,post-hoc test_at_best_val_mean envelope over fixed_ring_matched/random_matched/expander_matched,per dataset/setting,42:Expander Matched;43:Expander Matched;44:Random Matched;45:Random Matched;46:Random Matched,False,not present in core headline metrics,"experiments/final_analysis.py:449-475,504-507,1020-1025; main experiment/ta_dvfg_hgb_reliability.py:2086-2105",Case B for paper grouped row: post-hoc test-mean envelope; relabel as Oracle Best Matched or replace with predeclared fixed control.
+IMDB,main,Expander Matched,expander_matched,0.2909274101257324,0.0185943498774802,post-hoc test_at_best_val_mean envelope over fixed_ring_matched/random_matched/expander_matched,per dataset/setting,42:Expander Matched;43:Random Matched;44:Expander Matched;45:Expander Matched;46:Ring Matched,False,not present in core headline metrics,"experiments/final_analysis.py:449-475,504-507,1020-1025; main experiment/ta_dvfg_hgb_reliability.py:2086-2105",Case B for paper grouped row: post-hoc test-mean envelope; relabel as Oracle Best Matched or replace with predeclared fixed control.
+IMDB,hard_noisy,Expander Matched,expander_matched,0.2879032135009766,0.0093397066304789,post-hoc test_at_best_val_mean envelope over fixed_ring_matched/random_matched/expander_matched,per dataset/setting,42:Expander Matched;43:Expander Matched;44:Expander Matched;45:Ring Matched;46:Ring Matched,False,not present in core headline metrics,"experiments/final_analysis.py:449-475,504-507,1020-1025; main experiment/ta_dvfg_hgb_reliability.py:2086-2105",Case B for paper grouped row: post-hoc test-mean envelope; relabel as Oracle Best Matched or replace with predeclared fixed control.
+```
