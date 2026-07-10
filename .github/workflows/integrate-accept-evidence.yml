@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - .github/workflows/integrate-accept-evidence.yml
+  push:
+    branches: [main]
 
 permissions:
   contents: write
@@ -474,6 +476,25 @@ usage README.''', "supp code paths")
           if n != 1:
               raise SystemExit("Could not update checklist item 2.8 exactly once")
           checklist_path.write_text(checklist, encoding="utf-8")
+      - name: Check out integration branch
+        uses: actions/checkout@v4
+        with:
+          ref: integrate-accept-evidence-20260710
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply patch program stored in integration workflow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          workflow = Path('.github/workflows/integrate-accept-evidence.yml').read_text(encoding='utf-8')
+          start_marker = "          python - <<'PY'\n"
+          end_marker = "\n          PY\n"
+          start = workflow.index(start_marker) + len(start_marker)
+          end = workflow.index(end_marker, start)
+          block = workflow[start:end]
+          code = '\n'.join(line[10:] if line.startswith('          ') else line for line in block.splitlines())
+          exec(compile(code, '<accept-evidence-patch>', 'exec'))
           PY
 
       - name: Install TeX and PDF QA tools
@@ -490,11 +511,9 @@ usage README.''', "supp code paths")
           bibtex main
           pdflatex -interaction=nonstopmode -halt-on-error main.tex
           pdflatex -interaction=nonstopmode -halt-on-error main.tex
-
           rm -f supplementary.aux supplementary.log supplementary.out supplementary.pdf
           pdflatex -interaction=nonstopmode -halt-on-error supplementary.tex
           pdflatex -interaction=nonstopmode -halt-on-error supplementary.tex
-
           rm -f ReproducibilityChecklist.aux ReproducibilityChecklist.log ReproducibilityChecklist.out ReproducibilityChecklist.pdf
           pdflatex -interaction=nonstopmode -halt-on-error ReproducibilityChecklist.tex
           pdflatex -interaction=nonstopmode -halt-on-error ReproducibilityChecklist.tex
@@ -509,7 +528,6 @@ usage README.''', "supp code paths")
           pages=$(pdfinfo main.pdf | awk '/^Pages:/ {print $2}')
           test "$pages" = "8"
           pdftotext -f 8 -l 8 -layout main.pdf page8.txt
-          grep -q "References" page8.txt
           first_nonempty=$(sed '/^[[:space:]]*$/d' page8.txt | head -n 1)
           echo "Page 8 first nonempty line: $first_nonempty"
           echo "$first_nonempty" | grep -q "References"
@@ -517,12 +535,12 @@ usage README.''', "supp code paths")
           grep -q "Caruana" main.bbl
           grep -q "Jacobs" main.bbl
 
-      - name: Commit validated source changes and remove workflow
+      - name: Commit validated source changes and remove temporary files
         run: |
           set -euxo pipefail
-          rm .github/workflows/integrate-accept-evidence.yml
+          rm -f .github/workflows/integrate-accept-evidence.yml .integration-trigger
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add paper/source/main.tex paper/source/supplementary.tex paper/source/ReproducibilityChecklist.tex .github/workflows/integrate-accept-evidence.yml
+          git add paper/source/main.tex paper/source/supplementary.tex paper/source/ReproducibilityChecklist.tex .github/workflows/integrate-accept-evidence.yml .integration-trigger
           git commit -m "Integrate MovieLens mechanism and pruning evidence"
-          git push origin HEAD:${{ github.head_ref }}
+          git push origin HEAD:integrate-accept-evidence-20260710
