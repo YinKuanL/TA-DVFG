@@ -1,76 +1,44 @@
-# TA-DVFG Supplement Experiment Code
+# TA-DVFG Research Repository
 
-This folder contains the cleaned experiment code used for the paper results.
-It excludes raw datasets, caches, Python bytecode, temporary files, and LaTeX.
+This repository contains the research code, experiment artifacts, and paper
+material for the TA-DVFG project.
 
-## Contents
+## Canonical Paper Source
 
-- `main experiment/ta_dvfg_hgb_reliability.py`: core TA-DVFG HGB engine.
-- `experiments/`: experiment runners, audits, aggregation, and plotting scripts.
-- `experiments/movielens/`: MovieLens 1M experiment suite.
-- `models/movielens_parties.py`: heterogeneous MovieLens local predictors.
-- `tests/`: lightweight protocol tests.
-- `metadata/`: small config/result provenance files.
+The Git-tracked canonical paper source now lives under `paper/source/`.
 
-## Setup
+- `GitHub` is the canonical version history.
+- `Overleaf` is the compilation and visual review mirror.
+- `Codex` is the synchronization agent between the two.
 
-Use Python 3.9+.
+The canonical paper roots are:
 
-```bash
-pip install -r requirements.txt
-```
+- `paper/source/main.tex`
+- `paper/source/supplementary.tex`
+- `paper/source/ReproducibilityChecklist.tex`
 
-The HGB experiments require PyTorch Geometric dataset access. MovieLens requires
-MovieLens 1M under `data/movielens/ml-1m/`.
+The source directory also contains the required bibliography, AAAI style files,
+and only the figures/assets referenced by those compile roots.
 
-## Main Commands
+`CameraReady2027.tex` is not part of the canonical paper source because the
+current paper uses `main.tex` and `supplementary.tex` as the real entry points.
 
-HGB cached core:
+## Synchronization Workflow
 
-```bash
-python experiments/run_cached_core.py --datasets ACM DBLP IMDB --seeds 42,43,44,45,46
-```
+Normal workflow:
 
-HGB K sensitivity:
+1. Pull the latest `origin/main`.
+2. Compare `paper/source/` against the configured Overleaf project.
+3. Edit `paper/source/` locally.
+4. Validate the local LaTeX structure.
+5. Synchronize the matching source to Overleaf.
+6. Commit and push GitHub.
 
-```bash
-python experiments/run_k_sensitivity.py
-```
+Detailed synchronization rules are documented in
+`docs/PAPER_SYNC_PROTOCOL.md`.
 
-Nested weak-party scaling:
+## Repository Scope
 
-```bash
-python experiments/run_nested_weak_scaling.py
-```
-
-ACM/DBLP alignment references:
-
-```bash
-python experiments/alignment_references.py --dataset ACM --setting hard --seeds 42,43,44,45,46
-python experiments/alignment_references.py --dataset DBLP --setting hard --seeds 42,43,44,45,46
-```
-
-MovieLens 1M:
-
-```bash
-python experiments/movielens/prepare_movielens.py --data-dir data/movielens
-python experiments/movielens/run_movielens_tadvfg.py --data-dir data/movielens/ml-1m --output-dir outputs/movielens --seeds 42,43,44,45,46 --num-parties 5 --setting five --local-epochs 8
-python experiments/movielens/run_movielens_tadvfg.py --data-dir data/movielens/ml-1m --output-dir outputs/movielens_main15 --seeds 42,43,44,45,46 --setting main --local-epochs 8
-python experiments/movielens/run_movielens_tadvfg.py --data-dir data/movielens/ml-1m --output-dir outputs/movielens_hard15 --seeds 42,43,44,45,46 --setting hard --local-epochs 8
-```
-
-Final aggregation/audit:
-
-```bash
-python experiments/final_analysis.py
-python experiments/config_audit.py
-python experiments/final_claims_audit.py
-```
-
-## Notes
-
-- Seeds used in the paper are `42,43,44,45,46`.
-- MovieLens target construction uses MovieLens 1M observed ratings only:
-  `rating >= 4` is positive; ratings `1--3` are negative; no negative sampling.
-- MovieLens split is chronological 70/10/20 over observed interactions.
-- Test labels are used only for final reporting.
+This repository also includes experiment code, cached outputs, and supporting
+analysis material. Those artifacts are not implicitly regenerated as part of a
+paper-edit task.
