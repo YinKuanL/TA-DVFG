@@ -89,7 +89,11 @@ aggregation, while same-state interventions show that peer exchange materially
 improves connected parties' local predictions. Learned topology is therefore
 not claimed to be universally necessary for aggregation; its distinct role is
 in party-local or joint deployment, where the communication graph itself
-changes local inference. The method does not provide a formal privacy guarantee
+changes local inference. A useful mental model is a consortium in which one
+coordinator needs an aggregate output while each member also operates a local
+downstream system. For example, a hospital registry may need one risk score
+while each hospital still needs an improved local alert; this is a motivating
+deployment pattern, not a claim that HGB or MovieLens instantiates that domain. The method does not provide a formal privacy guarantee
 and is not presented as a fully serverless end-to-end VFGL protocol. The
 MovieLens 15-party Main and Hard settings are controlled stress constructions
 rather than naturally occurring 15-organization federations.
@@ -613,6 +617,16 @@ Table~\ref{tab:supp-complete}. The main-paper Oracle Matched row is explicitly
 labeled as a post-hoc diagnostic: choosing the best matched family by test
 performance is not a deployable baseline.
 
+\paragraph{Why IMDB behaves differently.}
+The complete matrix shows a qualitatively different IMDB regime. Non-selective
+methods remain near 28--29\%, while methods with explicit participant selection
+(Global Top-$k$ and \method{}) rise sharply on IMDB Main. We therefore treat
+IMDB primarily as evidence that filtering harmful predictors matters, not as
+evidence that graph structure itself explains the gain. The present artifact
+does not contain a matched per-party quality-distribution diagnostic sufficient
+to explain why this separation is larger on IMDB; that remains a targeted
+analysis gap.
+
 
 \section{Mechanism: When Is a Graph Actually Needed?}
 \label{sec:supp-mechanism}
@@ -640,7 +654,11 @@ ablation, because $K$ changes both the communication operator and the topology
 optimized on validation data. Indeed, independently reselected $K=0$ obtains
 similar active accuracy to the default but selects a different graph in every
 audited seed; mean edge-set Jaccard similarity is 0.410 on ACM and 0.164 on
-DBLP.
+DBLP. Together with the degree-weighting audit below (same topology in only
+1/10 reselections), this rules out interpreting the selected edge identities as
+a unique semantic structure. The supported interpretation is narrower:
+distinct sparse graphs can be near-equivalent in deployment utility. We call
+this structural multiplicity and evaluate utility separately from edge identity.
 
 To isolate exchange, condition A is the exact paper default ($K=1$). Condition C
 takes A's best-validation epoch, topology, participant set, degree vector,
@@ -1267,7 +1285,11 @@ Table~\ref{tab:supp-scalability} shows that selected graphs remain near five
 links from 5 to 30 parties, while candidate evaluations and topology-selection
 time grow much faster. Sparse deployment therefore scales differently from the
 current selector: exhaustive candidate scoring, rather than deployment
-communication, is the principal bottleneck.
+communication, is the principal bottleneck. A concrete mitigation is a
+two-stage selector that ranks feasible edges with a cheap edge-local score and
+reruns whole-graph consensus only for the top-$M$ shortlist. This is an
+algorithmic path, not an evaluated result in the present paper; a pruning
+accuracy--time curve is therefore future work.
 
 \begin{table}[!t]
 \centering
@@ -1335,7 +1357,10 @@ artifact of a compulsory minimum or a fixed edge quota.
 
 All primary HGB and MovieLens results use seeds 42--46. Reported
 mean--dispersion summaries follow the same five-seed aggregation convention as
-the main paper. Paired tests compare methods or protocol variants under shared
+the main paper. We treat the same-state peer-exchange intervention as the
+primary mechanism test. Budget, depth, degree, and selector-sanity sweeps are
+exploratory robustness analyses; their non-significant results are not used as
+confirmatory evidence of equivalence. Paired tests compare methods or protocol variants under shared
 seeds and matched experimental conditions. The HGB analysis reports paired
 $t$-tests, Wilcoxon signed-rank tests, 95\% confidence intervals, paired
 Cohen's $d_z$, and Holm correction. With five seeds, confidence intervals and
@@ -1431,6 +1456,13 @@ equivalence checks pass. The focused comparison includes all-party and
 reliability-selected latent-fusion references plus a useful-only oracle
 diagnostic. Additional failed gated/concatenation variants are preserved in the
 submitted package.
+
+\paragraph{Code availability and environment boundary.}
+The source code and experiment artifacts required for the reported analyses will
+be released publicly upon publication. The review package contains the raw
+CSV/JSON outputs and referenced analysis paths. Exact GPU/CPU, operating-system,
+and package-version metadata are only partially preserved in the current
+artifact; we do not reconstruct or invent missing environment details.
 
 \paragraph{Code paths.}
 MovieLens is implemented by

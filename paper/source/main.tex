@@ -83,15 +83,18 @@ distributions only over selected links and perform reliability-aware consensus.
 The topology can target active-party, party-local, or joint readouts.
 
 Across six controlled 15-party HGB-derived settings, \method{} outperforms Full
-Mesh and matched sparse controls while selecting only 5--5.8 of 105 possible
-links. On MovieLens, it improves over Best Single and reaches 0.7516 AUC with
-3.20M transmitted scalars, versus 0.7497 AUC and 10.00M for Full Mesh. In
-15-party MovieLens stress settings, it retains only 5.0--5.2 links while
-outperforming 105-link Full Mesh. Mechanism audits show that direct subset
-selection is a strong lower-cost choice for active-only readout, whereas peer
-exchange materially improves party-local predictions. \method{} is an
-inference-stage collaboration mechanism rather than a formal privacy mechanism
-or a fully serverless, end-to-end VFGL protocol.
+Mesh and matched sparse P2P controls with only 5--5.8 of 105 possible links.
+The strongest centralized reference, Global Top-$k$, is numerically higher in
+four settings and lower in two; with five seeds, paired tests do not resolve a
+difference. This boundary is central: same-cardinality subset selection is
+cheaper and slightly stronger for active-only readout, whereas sparse peer
+exchange raises party-local accuracy by 1.85/2.67 points on ACM/DBLP Hard and
+connected-party accuracy by 4.79/7.16 points. On MovieLens, \method{} reaches
+0.7516 AUC with 3.20M transmitted scalars, versus 0.7497 and 10.00M for Full
+Mesh. Thus, learned topology is not claimed to be necessary for one centralized
+aggregate; its distinct role is party-local or joint deployment. \method{} is
+an inference-stage collaboration mechanism rather than a formal privacy
+mechanism or a fully serverless, end-to-end VFGL protocol.
 \end{abstract}
 
 \section{Introduction}
@@ -135,7 +138,14 @@ communication can propagate weak predictions while incurring unnecessary cost.
 Moreover, deployment may require an active-party readout, party-local
 predictions, or a trade-off between them. Direct subset selection can suffice
 for active-only readout, whereas party-local improvement requires useful peer
-communication. The problem is therefore to learn a sparse graph whose utility is judged by the resulting deployment performance.
+communication. A concrete deployment pattern is a consortium of hospitals that
+maintain institution-specific risk models over aligned patients: a registry may
+need one aggregate score, while each hospital's alerting system also needs an
+improved local prediction without exporting hidden states or routing every
+inference through a permanent center. Similar dual-output requirements can
+arise in multi-bank fraud screening. These are motivating deployment patterns,
+not empirical claims about our benchmarks. The problem is therefore to learn a
+sparse graph whose utility is judged by the resulting deployment performance.
 
 We propose \method{}, a validation-assisted sparse topology learner for trained
 heterogeneous predictors. A label-holding active party uses held-out validation
@@ -211,6 +221,17 @@ heterogeneous models. Their primary goal is knowledge transfer, model fusion, or
 distillation through public data, a server model, or generated knowledge.
 In contrast, \method{} treats predictions as inference-time messages and
 directly learns the sparse peer-to-peer communication graph.
+
+\paragraph{Ensemble selection and expert combination.}
+Classical stacking learns a meta-level combiner
+\cite{wolpert1992stacked}, ensemble selection chooses a subset or weighted
+library of predictors \cite{caruana2004ensemble}, and mixtures of experts learn
+gating rules over specialized predictors \cite{jacobs1991moe}. \method{} is
+methodologically related to this family and does not claim novelty for predictor
+selection or combination itself. Its object is different: the selector returns
+a sparse communication graph, each candidate edge is evaluated after rerunning
+consensus on the current whole graph, and the objective may include party-local
+post-consensus states rather than only one centralized ensemble output.
 
 \paragraph{Decentralized and adaptive topology.}
 Decentralized optimization exchanges model parameters over a client graph
@@ -513,10 +534,12 @@ rather than relying only on asymptotic edge counts.
 \footnotesize
 \setlength{\tabcolsep}{3.1pt}
 \caption{HGB Test@BestVal accuracy (\%, mean $\pm$ standard deviation over
-five seeds). Bold and underlined values denote the best and second-best
-results, respectively. Oracle Matched is a post-hoc test-mean upper envelope
-over Ring, Random, and Expander matched sparse controls and is included only
-as a stronger diagnostic reference.}
+five seeds). Global Top-$k$ is a centralized active-only selection reference:
+it is numerically higher than \method{} in four settings and lower in two.
+Bold and underlined values denote the best and second-best results. Oracle
+Matched is a post-hoc test-mean upper envelope over matched sparse controls and
+is diagnostic only. The table therefore does not support a universal
+active-readout advantage for graph learning.}
 \label{tab:hgb-main}
 \begin{tabular}{lcccccc}
 \toprule
@@ -611,47 +634,58 @@ $P_5$ & Genre similarity & KNN+MLP & \PfiveParams \\
 \end{tabular}
 \end{table}
 
-\paragraph{Controlled HGB results.}
-Table~\ref{tab:hgb-main} shows that \method{} outperforms Full Mesh and the post-hoc Oracle
-Matched sparse envelope in all six settings while selecting only 5--5.8 of 105
-possible links. Across the five shared seeds, paired two-sided Wilcoxon tests do not
-detect a significant difference between \method{} and Global Top-$k$. With $n=5$, however, this should not be interpreted as evidence of
-equivalence. We therefore treat Global Top-$k$ as the strongest centralized
-prediction-selection reference: \method{} achieves comparable task-level
-utility while producing an explicit sparse peer graph that supports
-party-local post-consensus deployment. Complete 13-method results and paired
-statistics are reported in the supplementary material.
+\paragraph{Controlled HGB results and the active-only boundary.}
+The first result to read from Table~\ref{tab:hgb-main} is the boundary, not a
+universal win: Global Top-$k$ is numerically higher in four of six settings,
+while \method{} is higher in two. Across five shared seeds, paired two-sided
+Wilcoxon tests do not resolve a difference; with $n=5$, this is neither evidence
+of equivalence nor high-powered evidence of superiority. We therefore do not
+claim that learning a graph is necessary for a single centralized readout.
+Relative to P2P alternatives, however, \method{} outperforms Full Mesh and the
+post-hoc Oracle Matched sparse envelope in all six settings while selecting only
+5--5.8 of 105 links. The mechanism question is thus whether the graph provides
+value beyond participant selection when local parties also consume predictions.
+Complete 13-method results and paired statistics are in the supplement.
+
+IMDB is a selection-dominated regime in this controlled construction:
+non-selective global and P2P methods cluster near 28--29\%, whereas both Global
+Top-$k$ and \method{} rise sharply on IMDB Main. We therefore do not attribute
+the IMDB gain to graph structure alone. The result mainly shows the value of
+filtering harmful predictors; explaining why the useful/weak quality gap is
+larger on IMDB requires dedicated per-party diagnostics beyond the present
+suite.
 
 \begin{table}[t]
 \centering
 \scriptsize
-\setlength{\tabcolsep}{3.2pt}
-\caption{ACM Main deployment communication (transmitted scalars). ``Inference
-total'' is peer exchange plus readout collection; low-frequency topology-control
-traffic is reported separately in the supplementary material.}
-\label{tab:communication-main}
-\begin{tabular}{lrrr}
+\setlength{\tabcolsep}{2.8pt}
+\caption{Active-only boundary on Hard settings. Same-cardinality subset methods
+use the participant count selected by \method{} but define no peer edges.
+They slightly exceed its mean active accuracy while using roughly one-third of
+the communication.}
+\label{tab:active-only-boundary}
+\begin{tabular}{lrrrr}
 \toprule
-Method & Peer & Readout & Inference total \\
+& \multicolumn{2}{c}{ACM Hard} & \multicolumn{2}{c}{DBLP Hard} \\
+Method & Acc. & Comm. & Acc. & Comm. \\
 \midrule
-Global Top-$k$ & 0 & 45,375 & 45,375 \\
-Oracle Matched & 90,750 & 54,450 & 145,200 \\
-Full Mesh & 1,905,750 & 136,125 & 2,041,875 \\
-\method{} & 90,750 & 61,710 & 152,460 \\
+\method{} & 85.54 & 143,385 & 90.25 & 253,157 \\
+Top-Reliability-$q$ & 86.03 & 49,005 & 90.57 & 94,122 \\
+Greedy-Subset-$q$ & \textbf{86.59} & 50,820 & 90.42 & 97,368 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Communication accounting.}
-Table~\ref{tab:communication-main} separates peer exchange from deployment
-readout traffic. \method{} uses
-the same peer volume as the matched sparse reference while achieving
-substantially higher accuracy. Relative to Full Mesh, it reduces peer exchange
-by $21\times$ and total deployment communication from 2.04M to 0.15M
-transmitted scalars, a 92.5\% reduction. Global Top-$k$ is cheaper because it
-performs centralized collection rather than peer consensus; it therefore
-represents a different deployment interface rather than a sparse-topology
-baseline.
+\paragraph{Active-only boundary and communication accounting.}
+Table~\ref{tab:active-only-boundary} makes the central limitation visible in the
+main paper: for one aggregate output, direct subset selection is the stronger
+lightweight interface in these audited settings. The graph is justified only
+when selected links themselves are useful to local consumers. For the P2P
+comparison, \method{} still reduces ACM Main peer exchange by $21\times$ and
+total deployment communication from 2.04M to 0.15M scalars relative to Full
+Mesh; detailed peer/readout accounting remains in the supplement. Global
+Top-$k$ is cheaper still because it performs centralized collection without peer
+consensus.
 
 \begin{figure*}[!t]
 \centering
@@ -730,13 +764,15 @@ active, local, and joint topology objectives.}
 \paragraph{Mechanism and deployment analysis.}
 Figure~\ref{fig:mechanism-deployment} shows that graph-level selection reaches
 85.54/90.25\% on ACM/DBLP Hard, versus 76.41/87.91\% for Adaptive Pairwise
-and 76.74/87.32\% for Adaptive Complementarity. A same-cardinality audit,
-however, shows that direct subset selection matches or slightly exceeds
-active-only readout at lower communication. In contrast, disabling only peer
-exchange changes active accuracy by at most 0.20 points but reduces all-party
-local mean by 1.85/2.67 points and connected-party accuracy by 4.79/7.16
-points. Thus, direct selection is strong for active-only deployment, whereas
-sparse peer exchange is the distinctive benefit for party-local inference.
+and 76.74/87.32\% for Adaptive Complementarity. Table~\ref{tab:active-only-boundary}
+shows the complementary result: direct subset selection slightly exceeds
+active-only readout at lower communication. In contrast, a same-state
+intervention that disables only peer exchange changes active accuracy by at most
+0.20 points but reduces all-party local mean by 1.85/2.67 points and
+connected-party accuracy by 4.79/7.16 points. Hence the evidence separates two
+problems: active-only deployment is mainly participant selection, whereas
+party-local or joint deployment is where sparse peer exchange adds a distinct
+capability.
 
 \paragraph{Label ownership and deployment readouts.}
 Under the label-location protocol, only the active party receives training and
@@ -832,12 +868,15 @@ selection mechanism are available at deployment. On ACM Hard, \method{} remains
 above the deployable reliability-selected latent reference while requiring only
 task-level outputs and producing an explicit sparse peer-to-peer graph.
 
-A selected edge should not be interpreted as a universal semantic similarity or
-a permanent relationship between organizations. Degree-weighting ablations
-change the selected graph substantially while leaving aggregate active
-performance nearly unchanged, indicating multiple near-equivalent deployment
-structures. The graph is best viewed as a low-frequency deployment artifact
-under the current predictors, consensus operator, and objective.
+The selected edge identities are not stable enough to support a semantic
+``discovered relationship'' claim. Reselecting with $K=0$ yields mean edge-set
+Jaccard similarity 0.410/0.164 on ACM/DBLP Hard, and removing degree weighting
+reproduces the same topology in only 1/10 runs. Yet these interventions leave
+active utility nearly unchanged. We interpret this as \emph{utility stability
+under structural multiplicity}: several distinct sparse graphs are
+near-equivalent for the current predictors and objective. The graph is therefore
+a low-frequency deployment artifact, not a unique or permanent organizational
+structure.
 
 \section{Limitations and Conclusion}
 
@@ -865,9 +904,18 @@ relationship. Because the primary results use only five seeds, non-significant p
 tests should not be interpreted as evidence of equivalence.
 
 Sparse deployment communication scales with the selected edge set, but
-exhaustive candidate scoring remains the current scalability bottleneck.
-Candidate pruning or approximate search will therefore be necessary beyond the
-tested scale.
+exhaustive candidate scoring remains the current scalability bottleneck. A
+concrete next step is two-stage screening: use a cheap edge-local score to
+shortlist the top-$M$ feasible candidates, then apply the existing whole-graph
+rerun only to that shortlist. We do not report a pruning result here, so its
+accuracy--time trade-off remains an open experiment rather than a claimed
+contribution.
+
+Code and experiment artifacts required for the reported analyses will be
+released publicly upon publication; the review package contains the referenced
+analysis scripts and raw outputs. Exact hardware and software-version metadata
+are only partially preserved in the current artifact and remain a
+reproducibility limitation.
 
 In summary, \method{} reframes vertical graph-view collaboration as sparse
 prediction-space deployment. Prediction space determines what heterogeneous
