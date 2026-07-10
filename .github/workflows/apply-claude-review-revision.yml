@@ -1,0 +1,52 @@
+name: Apply Claude review revision
+
+on:
+  push:
+    branches:
+      - claude-review-revision-20260710
+    paths:
+      - scripts/apply_claude_review_revision.py
+      - .github/workflows/apply-claude-review-revision.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-revision:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude-review-revision-20260710
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Apply review revision
+        run: python scripts/apply_claude_review_revision.py
+      - name: Validate changed source files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for p in [
+              Path('paper/source/main.tex'),
+              Path('paper/source/supplementary.tex'),
+              Path('paper/source/ReproducibilityChecklist.tex'),
+              Path('paper/source/references.bib'),
+          ]:
+              text = p.read_text(encoding='utf-8')
+              assert text.strip(), f'{p} is empty'
+          print('Source files are non-empty after revision.')
+          PY
+      - name: Commit revised paper sources
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/source/main.tex paper/source/supplementary.tex paper/source/ReproducibilityChecklist.tex paper/source/references.bib
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Revise paper around active-only boundary and topology multiplicity"
+            git push origin HEAD:claude-review-revision-20260710
+          fi
