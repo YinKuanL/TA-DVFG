@@ -1,0 +1,32 @@
+name: Validate revised paper compilation
+
+on:
+  push:
+    branches:
+      - claude-review-revision-20260710
+    paths:
+      - paper/source/**
+      - .github/workflows/validate-paper-revision.yml
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  compile-paper:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile main paper
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          working_directory: paper/source
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+      - name: Compile supplement
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: supplementary.tex
+          working_directory: paper/source
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
