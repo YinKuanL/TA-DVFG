@@ -7,6 +7,9 @@ on:
     paths:
       - scripts/apply_claude_review_revision.py
       - .github/workflows/apply-claude-review-revision.yml
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -50,5 +53,3 @@ jobs:
             git commit -m "Revise paper around active-only boundary and topology multiplicity"
             git push origin HEAD:claude-review-revision-20260710
           fi
-
-# Trigger revision run after workflow creation.
