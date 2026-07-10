@@ -26,30 +26,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Apply review revision
-        run: python scripts/apply_claude_review_revision.py
-      - name: Validate changed source files
+      - name: Apply review revision with captured diagnostics
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          for p in [
-              Path('paper/source/main.tex'),
-              Path('paper/source/supplementary.tex'),
-              Path('paper/source/ReproducibilityChecklist.tex'),
-              Path('paper/source/references.bib'),
-          ]:
-              text = p.read_text(encoding='utf-8')
-              assert text.strip(), f'{p} is empty'
-          print('Source files are non-empty after revision.')
-          PY
-      - name: Commit revised paper sources
+          set +e
+          python scripts/apply_claude_review_revision.py > revision_stdout.txt 2> revision_error.txt
+          code=$?
+          echo "$code" > revision_exit.txt
+          exit 0
+      - name: Commit diagnostics only
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add paper/source/main.tex paper/source/supplementary.tex paper/source/ReproducibilityChecklist.tex paper/source/references.bib
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "Revise paper around active-only boundary and topology multiplicity"
-            git push origin HEAD:claude-review-revision-20260710
-          fi
+          git add revision_stdout.txt revision_error.txt revision_exit.txt
+          git commit -m "Capture review revision diagnostics" || true
+          git push origin HEAD:claude-review-revision-20260710
