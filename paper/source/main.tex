@@ -86,15 +86,16 @@ Across six controlled 15-party HGB-derived settings, \method{} outperforms Full
 Mesh and matched sparse P2P controls with only 5--5.8 of 105 possible links.
 The strongest centralized reference, Global Top-$k$, is numerically higher in
 four settings and lower in two; with five seeds, paired tests do not resolve a
-difference. This boundary is central: same-cardinality subset selection is
-cheaper and slightly stronger for active-only readout, whereas sparse peer
-exchange raises party-local accuracy by 1.85/2.67 points on ACM/DBLP Hard and
-connected-party accuracy by 4.79/7.16 points. On MovieLens, \method{} reaches
-0.7516 AUC with 3.20M transmitted scalars, versus 0.7497 and 10.00M for Full
-Mesh. Thus, learned topology is not claimed to be necessary for one centralized
-aggregate; its distinct role is party-local or joint deployment. \method{} is
-an inference-stage collaboration mechanism rather than a formal privacy
-mechanism or a fully serverless, end-to-end VFGL protocol.
+difference. On the audited Hard settings, same-cardinality subset selection is
+cheaper and slightly stronger for active-only readout, whereas peer exchange
+raises party-local accuracy by 1.85/2.67 points and connected-party accuracy by
+4.79/7.16 points. The same boundary reproduces on MovieLens: disabling only peer exchange changes
+active AUC by at most 0.00016 but lowers connected-party mean AUC by
+0.0085--0.0131. \method{} reaches 0.7516 AUC at 3.20M transmitted scalars. Thus, learned topology is not
+claimed to be necessary for one centralized aggregate; its distinct role is
+party-local or joint deployment. \method{} is an inference-stage collaboration
+mechanism rather than a formal privacy mechanism or a fully serverless,
+end-to-end VFGL protocol.
 \end{abstract}
 
 \section{Introduction}
@@ -138,10 +139,9 @@ communication can propagate weak predictions while incurring unnecessary cost.
 Moreover, deployment may require an active-party readout, party-local
 predictions, or a trade-off between them. Direct subset selection can suffice
 for active-only readout, whereas party-local improvement requires useful peer
-communication. For example, a hospital consortium may need both a registry-level aggregate
-score and improved local predictions without exporting hidden states or routing
-every inference through a permanent center. Similar dual-output requirements can
-arise in multi-bank fraud screening. The problem is therefore to learn a sparse
+communication. A consortium may need both a coordinator-level aggregate and improved local
+predictions without exporting hidden states or routing every inference through a
+permanent center. The problem is therefore to learn a sparse
 graph whose utility is judged by deployment performance.
 
 We propose \method{}, a validation-assisted sparse topology learner for trained
@@ -178,8 +178,8 @@ performance rather than through edge-local scores.
 and separate participant-selection effects from peer-exchange effects.
 
 \item We evaluate the method across controlled HGB and heterogeneous
-MovieLens settings, covering communication, label ownership, scalability,
-deployment objectives, and a five-seed frozen-predictor latent-alignment study.
+MovieLens settings, covering communication, deployment, scalability, label
+ownership, and frozen-predictor latent-alignment references.
 
 \end{itemize}
 
@@ -202,13 +202,11 @@ models. FedHM \cite{yao2025fedhm} accommodates different model capacities,
 Flex-VFL \cite{castiglia2024flexvfl} supports heterogeneous vertical
 participants within a coordinated optimization framework, and VFedMH
 \cite{wang2023vfedmh} jointly trains multiple heterogeneous models through
-aggregated embeddings. These approaches make heterogeneous models
-collaborative by constructing a parameter-, optimization-, or
-representation-level coordination interface. In contrast, \method{} treats
-heterogeneous predictors as persistent local components that need not share
-architectures, hidden dimensions, or latent semantics. Their hidden states are
-neither aligned nor exchanged; collaboration begins only after each predictor
-maps its private input to a compatible task-output space.
+aggregated embeddings. These approaches coordinate heterogeneous models through parameters,
+optimization, or representations. In contrast, \method{} treats predictors as
+persistent local components with no shared architecture, hidden dimension, or
+latent semantics; collaboration begins only after each maps its private input
+to a compatible task-output space.
 
 \paragraph{Prediction-level collaboration.}
 FedMD \cite{li2019fedmd}, FedDF \cite{lin2020feddf}, and FedGen
@@ -701,25 +699,25 @@ local predictors.}
 \paragraph{MovieLens real-data heterogeneous predictor evaluation.}
 The five parties span interaction, profile, temporal, metadata, and genre views
 using MF, MLP, and KNN+MLP predictors with parameter counts
-651,970/130,402/162/825,218/297,938.
-Figure~\ref{fig:movielens-evidence} shows standalone predictor variation and
-the AUC--communication trade-off. Best Single reaches 0.7402 AUC with zero communication; seed-level deltas
-appear in the supplement.
+651,970/130,402/162/825,218/297,938. Figure~\ref{fig:movielens-evidence} shows
+standalone predictor variation and the AUC--communication trade-off. Best Single reaches 0.7402 AUC with zero communication; paired mechanism
+analyses appear in the supplement.
 
-Table~\ref{tab:movielens-main} shows that \method{} reaches 0.7516 ROC-AUC with 3.20M communication,
-compared with 0.7497/10.00M for Full Mesh and 0.7510/5.20M for Adaptive
-Pairwise. Because the absolute AUC differences are small, the main five-party result is one of Pareto efficiency rather than a large predictive gain:
-\method{} uses 68.0\% less communication than Full Mesh and 38.5\% less than
-Adaptive Pairwise. In the controlled 15-party Main and Hard stress settings,
-\method{} reaches 0.7516/0.7498 AUC with 5.2/5.0 links, outperforming 105-link
-Full Mesh and Adaptive Pairwise with roughly 14 links. When many weak predictors
-are present, selective graph construction therefore provides both sparsity and
-a predictive benefit.
+Table~\ref{tab:movielens-main} shows that \method{} reaches 0.7516 ROC-AUC with
+3.20M communication, compared with 0.7497/10.00M for Full Mesh and
+0.7510/5.20M for Adaptive Pairwise. Because the AUC differences are small, the
+five-party result is one of Pareto efficiency rather than a large predictive
+gain. In the controlled 15-party Main/Hard stress settings, \method{} reaches
+0.7516/0.7498 AUC with 5.2/5.0 links, above Full Mesh and Adaptive Pairwise.
 
-\paragraph{Cross-benchmark interpretation.}
-In MovieLens-5, topology learning mainly improves Pareto efficiency, whereas
-under weak-predictor stress it also improves robustness by filtering harmful
-communication.
+\paragraph{Real-data mechanism boundary.}
+Same-state MovieLens-5/Main/Hard ablations hold the selected state fixed and
+change only $K=1\rightarrow0$. Active AUC changes by at most 0.00016; all-party
+and connected-party mean AUC drop by 0.0038--0.0055 and 0.0085--0.0131,
+respectively, with 5/0/0 wins/ties/losses in every setting. On MovieLens-15,
+Greedy-Subset-$q$ reaches 0.7524/0.7498 versus 0.7516/0.7498 for \method{} at
+62--64\% lower communication. Thus the HGB boundary reproduces: active-only
+performance is mainly selection, while peer exchange improves local consumers.
 
 \paragraph{Stronger-information latent-alignment references.}
 The main method does not assume access to a shared latent interface. Direct
@@ -727,11 +725,9 @@ latent-alignment methods therefore require a stronger information boundary:
 they collect genuine hidden states and learn a shared projection or fusion
 module.
 
-We ran a separate five-seed ACM Hard reference suite in which all methods
-within each seed used the same freshly trained and subsequently frozen local
-predictors. Historical
-headline caches were excluded because a comparability audit found different
-predictor realizations. Hidden-state export reproduced the original forward path
+We ran a separate five-seed ACM Hard suite with identical freshly trained then
+frozen predictors per seed. Historical headline caches were excluded after a
+comparability audit found different predictor realizations. Hidden-state export reproduced the original forward path
 exactly in all 75 party--seed checks. All-party Project-and-Mean reaches
 $59.41\pm1.51\%$, and validation-reliability selection raises it to
 $77.10\pm0.93\%$. On the same frozen predictors, \method{} reaches
@@ -765,7 +761,8 @@ and 76.74/87.32\% for Adaptive Complementarity. Table~\ref{tab:active-only-bound
 shows that subset selection slightly exceeds active-only readout at lower cost.
 Disabling only peer exchange changes active accuracy by at most 0.20 points but
 reduces all-party local mean by 1.85/2.67 points and connected-party accuracy
-by 4.79/7.16 points. Thus active-only deployment is mainly participant
+by 4.79/7.16 points. Together with the MovieLens same-state audit, this supports
+a cross-benchmark boundary: active-only deployment is mainly participant
 selection, whereas local or joint deployment is where peer exchange adds a
 distinct capability.
 
@@ -798,21 +795,22 @@ five links versus 153 for Full Mesh.
 
 From 5 to 30 parties, candidate evaluations rise from 617 to 41,542 and
 topology time from 0.81 to 81.46 seconds while selected graphs stay near five
-links, confirming exhaustive scoring as the current bottleneck. Minimum-link
-and edge-budget sweeps show that nonempty sparse collaboration emerges without
-a minimum quota: with $m=0$, every ACM/DBLP Hard seed selects a nonempty graph
-(2.6/3.0 edges on average), with DBLP unchanged and ACM higher in this sweep;
-beyond any minimum quota, $B$ remains an upper bound; full results appear in
-the supplement.
+links, confirming exhaustive scoring as the current bottleneck. Pairwise-utility prescreening cuts evaluations by 88.8\% at $N=20$ with a
+$5.2\times$ speedup within 0.10 accuracy points of exhaustive search; at
+$N=30$, it cuts 90.5\% with an $8.5\times$ speedup within 0.23 points.
+Shortlist size is setting-dependent. Minimum-link and edge-budget sweeps further show that sparse
+collaboration can emerge without a forced quota and that $B$ remains an upper
+bound; full results appear in the supplement.
 
 
 
 \section{Discussion}
 
 Global Top-$k$ and same-cardinality subset selection are strong centralized
-choices for active-only deployment. \method{} is most justified when deployment
-also requires party-local predictions, because its sparse links materially
-improve connected parties.
+choices for active-only deployment on both HGB and MovieLens-15. \method{} is
+most justified when deployment also requires party-local predictions, because
+its sparse links materially improve connected parties across both benchmark
+families.
 
 The latent-alignment study sharpens this interface distinction. Weak parties
 hurt naive all-party fusion, while validation-based selection recovers much of
@@ -832,8 +830,8 @@ current predictors and objective. The graph is a deployment artifact, not a uniq
 \section{Limitations and Conclusion}
 
 Several limitations remain. First, for active-only deployment, direct subset
-selection matches or slightly exceeds \method{} in mean accuracy at lower
-communication on the audited Hard settings. The learned graph is therefore most
+selection matches or slightly exceeds \method{} at lower communication on the
+audited HGB Hard and MovieLens-15 settings. The learned graph is therefore most
 valuable when party-local inference is also required. Second, reducing the
 collaboration interface to predictions does not provide a privacy guarantee:
 predictions, validation signals, and optional logit gradients may still leak
@@ -851,16 +849,13 @@ Finally, nested weak-party scaling shows that \method{}'s advantage over
 dense and edge-local P2P methods widens as controlled weak predictors are
 added. This trend should not be extrapolated to naturally occurring parties
 or to architectural heterogeneity, for which we do not establish a monotonic
-relationship. Because the primary results use only five seeds, non-significant paired
-tests should not be interpreted as evidence of equivalence.
+relationship. 
 
 Sparse deployment communication scales with the selected edge set, but
-exhaustive candidate scoring remains the current scalability bottleneck. A
-concrete next step is two-stage screening: use a cheap edge-local score to
-shortlist the top-$M$ feasible candidates, then apply the existing whole-graph
-rerun only to that shortlist. We do not report a pruning result here, so its
-accuracy--time trade-off remains an open experiment rather than a claimed
-contribution.
+exhaustive candidate scoring remains a scalability bottleneck. Two-stage
+prescreening yields $5.2$--$8.5\times$ speedups in the supported 20/30-party
+settings, but effective shortlist size is setting-dependent and aggressive
+pruning is not uniformly reliable.
 
 All source code required to conduct and analyze the reported experiments will be
 released publicly upon publication; the review package contains the referenced

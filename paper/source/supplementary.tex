@@ -84,11 +84,11 @@ collection.
 
 The mechanism evidence supports an interface-dependent interpretation. Direct
 subset selection is a strong lower-cost alternative for active-only
-aggregation, while same-state interventions show that peer exchange materially
-improves connected parties' local predictions. Learned topology is therefore
-not claimed to be universally necessary for aggregation; its distinct role is
-in party-local or joint deployment, where the communication graph itself
-changes local inference. A useful mental model is a consortium in which one
+aggregation, while same-state interventions on both HGB and MovieLens show that
+peer exchange materially improves connected parties' local predictions. Learned
+topology is therefore not claimed to be universally necessary for aggregation;
+its distinct role is in party-local or joint deployment, where the communication
+graph itself changes local inference. A useful mental model is a consortium in which one
 coordinator needs an aggregate output while each member also operates a local
 downstream system. For example, a hospital registry may need one risk score
 while each hospital still needs an improved local alert; this is a motivating
@@ -110,9 +110,10 @@ require different topology objectives; and \textbf{Q5}, how sparse
 prediction-space collaboration compares with stronger-information
 latent-alignment interfaces when genuine hidden states can be exported from
 identical frozen local predictors. The primary evidence for Q1 is the HGB
-comparison and nested weak-party scaling; Q2 is addressed by MovieLens; Q3--Q4
-by the mechanism and deployment-objective audits; and Q5 by the ACM Hard
-five-seed alignment-reference study.
+comparison and nested weak-party scaling; Q2 is addressed by MovieLens; Q3 is
+addressed by same-state and selection-only audits on HGB and MovieLens; Q4 by
+the deployment-objective audit; and Q5 by the ACM Hard five-seed
+alignment-reference study.
 
 \paragraph{Controlled HGB construction.}
 All parties classify the same aligned target nodes under the original HGB labels
@@ -1014,6 +1015,75 @@ study is likewise limited to ACM Hard and frozen local predictors and should
 not be read as evidence that prediction-space collaboration universally
 dominates every possible latent interface.
 
+\subsection{MovieLens Mechanism Boundary}
+
+The same-state audit replays each exact \method{} best-validation state and
+changes only $K=1\rightarrow0$. The epoch, topology, participant set, degree
+vector, reliability vector, prediction snapshot, and readout definition are
+held fixed. Five-party Condition A reproduces every existing seed-level
+\texttt{adaptive\_graph\_val} reference and has mean ROC-AUC 0.751625.
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4.2pt}
+\caption{MovieLens same-state peer-exchange audit over seeds 42--46. Deltas are
+$K=1$ minus the exact same state with exchange disabled. Brackets are 95\%
+confidence intervals. All all-party and connected-party deltas have
+win/tie/loss 5/0/0.}
+\label{tab:supp-movielens-exchange}
+\begin{tabular}{lccc}
+\toprule
+Setting & Active AUC $\Delta$ & All-party local mean $\Delta$ & Connected-party mean $\Delta$ \\
+\midrule
+Five-party & $+0.000163\;[-0.000003,0.000329]$ & $+0.005501\;[0.003310,0.007693]$ & $+0.008456\;[0.006638,0.010275]$ \\
+15-party Main & $-0.000017\;[-0.000068,0.000033]$ & $+0.003849\;[0.002924,0.004773]$ & $+0.009935\;[0.008377,0.011492]$ \\
+15-party Hard & $+0.000071\;[-0.000102,0.000243]$ & $+0.005281\;[0.003683,0.006879]$ & $+0.013103\;[0.010306,0.015900]$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The active effect is negligible in all three settings, whereas local gains are
+positive for every seed and largest among parties that actually receive peer
+messages. This reproduces the HGB mechanism boundary in a real-data benchmark
+with heterogeneous predictor families.
+
+For the active-only boundary, Top-Reliability-$q$ and Greedy-Subset-$q$ receive
+the same participant cardinality $q=|\mathcal{S}(E)|$ as the corresponding
+\method{} state. Selection uses validation information only; test labels are
+evaluated after selection, and no selection-only method changes local
+predictions.
+
+\begin{table}[!t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4.0pt}
+\caption{MovieLens-15 active-only selection boundary. Communication is mean
+transmitted inference scalars.}
+\label{tab:supp-movielens-subset}
+\begin{tabular}{llrr}
+\toprule
+Setting & Method & Active AUC & Total comm. \\
+\midrule
+Main & Global Top-$k$ & 0.750335 & 2,000,420 \\
+Main & Top-Reliability-$q$ & 0.750256 & 2,320,487 \\
+Main & Greedy-Subset-$q$ & \textbf{0.752416} & 2,320,487 \\
+Main & \method{} & 0.751627 & 6,481,361 \\
+\midrule
+Hard & Global Top-$k$ & 0.747258 & 2,000,420 \\
+Hard & Top-Reliability-$q$ & 0.747138 & 2,400,504 \\
+Hard & Greedy-Subset-$q$ & \textbf{0.749847} & 2,400,504 \\
+Hard & \method{} & 0.749831 & 6,401,344 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Greedy-Subset-$q$ matches or exceeds mean active AUC while using about
+62--64\% less communication than \method{}. The MovieLens evidence therefore
+supports the same interface-dependent conclusion as HGB: active-only deployment
+is largely a participant-selection problem, while peer exchange directly changes
+party-local inference.
+
 
 \section{Representation-Alignment Boundary Study}
 \label{sec:supp-alignment}
@@ -1278,16 +1348,20 @@ topology selection.}
 \label{fig:supp-label-budget}
 \end{figure*}
 
-\paragraph{Party-count scalability.}
+\paragraph{Party-count scalability and shortlist prescreening.}
 Table~\ref{tab:supp-scalability} shows that selected graphs remain near five
 links from 5 to 30 parties, while candidate evaluations and topology-selection
 time grow much faster. Sparse deployment therefore scales differently from the
 current selector: exhaustive candidate scoring, rather than deployment
-communication, is the principal bottleneck. A concrete mitigation is a
-two-stage selector that ranks feasible edges with a cheap edge-local score and
-reruns whole-graph consensus only for the top-$M$ shortlist. This is an
-algorithmic path, not an evaluated result in the present paper; a pruning
-accuracy--time curve is therefore future work.
+communication, is the principal bottleneck.
+
+We evaluate the proposed two-stage mitigation using the existing Adaptive
+Pairwise edge-local utility only as a cheap pre-ranking signal. At each greedy
+step, feasible edges are ranked by that utility and whole-graph \method{}
+scoring is applied only to the top-$M$ shortlist; the graph-level objective and
+all selector defaults are unchanged. The $M=\mathrm{all}$ control exactly
+reproduces the exhaustive selector for every $N\in\{15,20,30\}$ and every seed
+42--46.
 
 \begin{table}[!t]
 \centering
@@ -1306,6 +1380,48 @@ Parties & Useful & Test@BestVal & Links & Evals & Time (s) \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4.0pt}
+\caption{Top-$M$ prescreening on ACM Hard scalability caches. Accuracy delta is
+shortlist minus exhaustive Test@BestVal; speedup and evaluation reduction are
+matched within the same run. Bold rows are the nontrivial settings used in the
+main-paper claim.}
+\label{tab:supp-pruning}
+\begin{tabular}{rrrccc}
+\toprule
+Parties & $M$ & Accuracy $\Delta$ & Speedup & Eval. reduction & Participant agreement \\
+\midrule
+15 & 5  & $+0.006919$ & $9.39\times$  & 94.80\% & 0.787 \\
+15 & 10 & $+0.004942$ & $5.89\times$  & 89.57\% & 0.686 \\
+15 & 20 & $+0.006919$ & $3.58\times$  & 79.28\% & 0.712 \\
+15 & 40 & $+0.005931$ & $1.84\times$  & 58.74\% & 0.786 \\
+\midrule
+20 & 5  & $+0.007249$ & $11.08\times$ & 97.19\% & 0.616 \\
+20 & 10 & $+0.004613$ & $7.51\times$  & 94.28\% & 0.601 \\
+\textbf{20} & \textbf{20} & $\mathbf{+0.000988}$ & $\mathbf{5.22\times}$ & \textbf{88.80\%} & \textbf{0.604} \\
+20 & 40 & $+0.007908$ & $3.40\times$  & 77.70\% & 0.719 \\
+\midrule
+30 & 5  & $+0.005272$ & $28.63\times$ & 98.84\% & 0.534 \\
+30 & 10 & $+0.002636$ & $19.81\times$ & 97.61\% & 0.586 \\
+30 & 20 & $+0.005272$ & $13.34\times$ & 95.38\% & 0.501 \\
+\textbf{30} & \textbf{40} & $\mathbf{-0.002306}$ & $\mathbf{8.46\times}$ & \textbf{90.48\%} & \textbf{0.719} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+At 20 parties, top-20 reduces whole-graph evaluations by 88.8\% and yields a
+$5.2\times$ speedup while staying within 0.10 accuracy points of exhaustive
+search. At 30 parties, top-40 reduces evaluations by 90.5\% and yields an
+$8.5\times$ speedup while staying within 0.23 points. The effective shortlist
+size is setting-dependent: no nontrivial 15-party row met the main-claim
+criterion, so more aggressive or smaller-scale settings are treated as
+supplementary diagnostics rather than a universal pruning guarantee. Absolute
+seconds from this closure audit are not compared directly with the historical
+timing column in Table~\ref{tab:supp-scalability}; the reported speedups are
+matched within-run ratios.
 
 \section{Selector Sanity Checks}
 
@@ -1366,24 +1482,32 @@ effect sizes should be read alongside $p$-values rather than as standalone
 guarantees.
 
 The primary mechanism inference is the same-state peer-exchange intervention.
-Active differences are small and non-significant
+On HGB, active differences are small and non-significant
 ($p=.3046/.1778$ on ACM/DBLP), whereas all-party local-mean improvements are
 1.85 and 2.67 points with paired $p=.002244$ and
-$6.677\times10^{-5}$. Same-cardinality subset baselines match or slightly
-exceed \method{} in mean active accuracy, but paired accuracy differences are
-not significant; their communication reductions relative to \method{} are
-strongly significant. The direct degree-factor effects are also small
-($p=.08016/.298$). These results support an interface-dependent mechanism claim
-rather than a universal graph-necessity claim.
+$6.677\times10^{-5}$. On MovieLens-5/Main/Hard, active AUC changes by at most
+0.000163, while all-party local-mean improvements are 0.003849--0.005501 and
+connected-party improvements are 0.008456--0.013103; every local and connected
+comparison has win/tie/loss 5/0/0 and a 95\% interval above zero.
+Same-cardinality subset baselines match or slightly exceed \method{} in mean
+active performance at substantially lower communication. These results support
+an interface-dependent mechanism claim rather than a universal graph-necessity
+claim.
 
 For the ACM Hard alignment study, the primary paired comparison is
 Reliability-Selected Project-and-Mean minus \method{}: $-8.50$ points with
 95\% CI $[-10.47,-6.54]$, paired $t$-test
 $p=2.76\times10^{-4}$, and win/tie/loss $0/0/5$. The useful-only latent result
-is an oracle diagnostic and is excluded from deployable-baseline claims. For
-MovieLens, the package contains paired per-seed AUC/communication deltas; the
-paper emphasizes the communication--accuracy trade-off rather than a large AUC
-margin.
+is an oracle diagnostic and is excluded from deployable-baseline claims. The
+MovieLens five-party headline still emphasizes the communication--accuracy
+trade-off rather than a large AUC margin; Tables~\ref{tab:supp-movielens-exchange}
+and~\ref{tab:supp-movielens-subset} separately report the mechanism boundary.
+
+The shortlist sweep is exploratory and is interpreted setting by setting.
+All $M=\mathrm{all}$ controls exactly reproduce exhaustive selection. The
+main-paper scalability claim uses only the nontrivial $N=20,M=20$ and
+$N=30,M=40$ settings; the remaining shortlist rows are not used to claim
+uniform pruning reliability.
 
 The consensus-depth study is interpreted descriptively because predictive
 performance remains stable while $K$-hop reachability expands. For nested
@@ -1442,10 +1566,12 @@ The $K=0$, fixed-state exchange, fixed-topology trajectory, degree-weighting,
 and same-cardinality subset analyses reuse the same local prediction
 trajectories and labels. Same-state interventions hold the epoch, topology,
 participant set, degree vector, reliability vector, and prediction snapshot
-fixed except for the explicitly ablated component. Direct subset baselines set
-$q=|\mathcal{S}(E)|$ from the corresponding default topology state and use
-validation labels only for ranking or greedy subset selection; test values are
-evaluated only after selection.
+fixed except for the explicitly ablated component. The MovieLens closure audit
+applies the same intervention to leakage-safe five-party and 15-party caches and
+uses ROC-AUC throughout. Direct subset baselines set $q=|\mathcal{S}(E)|$ from
+the corresponding default topology state and use validation labels only for
+ranking or greedy subset selection; test values are evaluated only after
+selection.
 
 \paragraph{Alignment-reference controls.}
 The ACM Hard alignment suite uses fresh frozen local predictors and therefore
@@ -1454,6 +1580,14 @@ equivalence checks pass. The focused comparison includes all-party and
 reliability-selected latent-fusion references plus a useful-only oracle
 diagnostic. Additional failed gated/concatenation variants are preserved in the
 submitted package.
+
+\paragraph{Accept-evidence closure audit.}
+The MovieLens mechanism and top-$M$ prescreening audits are implemented by
+\path{experiments/accept_evidence_closure_20260710.py}. The closure run used
+Python 3.14, PyTorch 2.12.1+cpu, and PyTorch Geometric 2.8.0. The MovieLens
+seed-42 smoke test exactly reproduced ROC-AUC 0.7530094676 from the existing
+cache, and all 15 $M=\mathrm{all}$ scalability controls reproduced the
+historical exhaustive selector before shortlist results were accepted.
 
 \paragraph{Code availability and environment boundary.}
 All source code required to conduct and analyze the reported experiments will be
@@ -1469,9 +1603,10 @@ preparation, plotting, 15-party aggregation, and packaging scripts under
 \path{experiments/movielens/} and \path{models/movielens_parties.py}.
 Consensus-depth sensitivity is implemented by
 \path{experiments/run_k_sensitivity.py}; nested weak-party scaling by
-\path{experiments/run_nested_weak_scaling.py}. The submitted package contains
-raw CSV/JSON outputs, figure scripts, supplementary diagnostics, and a usage
-README.
+\path{experiments/run_nested_weak_scaling.py}; and the MovieLens mechanism and
+pruning closure by \path{experiments/accept_evidence_closure_20260710.py}.
+The submitted package contains raw CSV/JSON outputs, figure scripts,
+supplementary diagnostics, and a usage README.
 
 Across all regimes, \method{} should be read as an inference-stage
 topology/readout mechanism. It avoids centralized hidden-representation fusion
