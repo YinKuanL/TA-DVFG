@@ -26,17 +26,41 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Apply review revision with captured diagnostics
+      - name: Fix literal regex replacement handling
         run: |
-          set +e
-          python scripts/apply_claude_review_revision.py > revision_stdout.txt 2> revision_error.txt
-          code=$?
-          echo "$code" > revision_exit.txt
-          exit 0
-      - name: Commit diagnostics only
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/apply_claude_review_revision.py')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('re.subn(pattern, repl, text, count=1, flags=flags)', 're.subn(pattern, lambda _m: repl, text, count=1, flags=flags)')
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Apply review revision
+        run: python scripts/apply_claude_review_revision.py
+      - name: Validate expected revisions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          main = Path('paper/source/main.tex').read_text(encoding='utf-8')
+          supp = Path('paper/source/supplementary.tex').read_text(encoding='utf-8')
+          check = Path('paper/source/ReproducibilityChecklist.tex').read_text(encoding='utf-8')
+          bib = Path('paper/source/references.bib').read_text(encoding='utf-8')
+          assert 'numerically higher in four settings and lower in two' in main
+          assert 'tab:active-only-boundary' in main
+          assert 'utility stability' in main
+          assert 'Why IMDB behaves differently' in supp
+          assert 'wolpert1992stacked' in bib
+          assert 'will be made publicly available' in check
+          print('Expected paper revisions are present.')
+          PY
+      - name: Commit revised paper sources
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add revision_stdout.txt revision_error.txt revision_exit.txt
-          git commit -m "Capture review revision diagnostics" || true
-          git push origin HEAD:claude-review-revision-20260710
+          git add paper/source/main.tex paper/source/supplementary.tex paper/source/ReproducibilityChecklist.tex paper/source/references.bib
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Revise paper around active-only boundary and topology multiplicity"
+            git push origin HEAD:claude-review-revision-20260710
+          fi
