@@ -1,0 +1,528 @@
+name: Integrate accept evidence
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/integrate-accept-evidence.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate-compile-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply evidence integration
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace_exact(text: str, old: str, new: str, label: str) -> str:
+              if old not in text:
+                  raise SystemExit(f"Missing exact block: {label}")
+              return text.replace(old, new, 1)
+
+          main_path = Path("paper/source/main.tex")
+          main = main_path.read_text(encoding="utf-8")
+
+          main = replace_exact(main, r'''Across six controlled 15-party HGB-derived settings, \method{} outperforms Full
+Mesh and matched sparse P2P controls with only 5--5.8 of 105 possible links.
+The strongest centralized reference, Global Top-$k$, is numerically higher in
+four settings and lower in two; with five seeds, paired tests do not resolve a
+difference. This boundary is central: same-cardinality subset selection is
+cheaper and slightly stronger for active-only readout, whereas sparse peer
+exchange raises party-local accuracy by 1.85/2.67 points on ACM/DBLP Hard and
+connected-party accuracy by 4.79/7.16 points. On MovieLens, \method{} reaches
+0.7516 AUC with 3.20M transmitted scalars, versus 0.7497 and 10.00M for Full
+Mesh. Thus, learned topology is not claimed to be necessary for one centralized
+aggregate; its distinct role is party-local or joint deployment. \method{} is
+an inference-stage collaboration mechanism rather than a formal privacy
+mechanism or a fully serverless, end-to-end VFGL protocol.''', r'''Across six controlled 15-party HGB-derived settings, \method{} outperforms Full
+Mesh and matched sparse P2P controls with only 5--5.8 of 105 possible links.
+The strongest centralized reference, Global Top-$k$, is numerically higher in
+four settings and lower in two; with five seeds, paired tests do not resolve a
+difference. On the audited Hard settings, same-cardinality subset selection is
+cheaper and slightly stronger for active-only readout, whereas sparse peer
+exchange raises party-local accuracy by 1.85/2.67 points and connected-party
+accuracy by 4.79/7.16 points. The same boundary holds on MovieLens: disabling
+only peer exchange changes active AUC by at most 0.00016 but lowers
+connected-party mean AUC by 0.0085--0.0131. \method{} also reaches 0.7516 AUC
+with 3.20M transmitted scalars, versus 0.7497/10.00M for Full Mesh. Thus,
+learned topology is not claimed to be necessary for one centralized aggregate;
+its distinct role is party-local or joint deployment. \method{} is an
+inference-stage collaboration mechanism rather than a formal privacy mechanism
+or a fully serverless, end-to-end VFGL protocol.''', "main abstract")
+
+          main = replace_exact(main, r'''A common output space does not, however, make unrestricted exchange desirable.
+Predictors differ in reliability and complementarity, so Full Mesh
+communication can propagate weak predictions while incurring unnecessary cost.
+Moreover, deployment may require an active-party readout, party-local
+predictions, or a trade-off between them. Direct subset selection can suffice
+for active-only readout, whereas party-local improvement requires useful peer
+communication. For example, a hospital consortium may need both a registry-level aggregate
+score and improved local predictions without exporting hidden states or routing
+every inference through a permanent center. Similar dual-output requirements can
+arise in multi-bank fraud screening. The problem is therefore to learn a sparse
+graph whose utility is judged by deployment performance.''', r'''A common output space does not make unrestricted exchange desirable: weak
+predictions can propagate while Full Mesh incurs unnecessary cost. Deployment
+may also require one active readout, party-local predictions, or both. Direct
+subset selection can suffice for active-only readout, whereas local improvement
+requires useful peer communication. Hospital consortia or multi-bank fraud
+systems illustrate such dual-output deployment. We therefore learn a sparse
+graph whose utility is judged by deployment performance.''', "main introduction motivation")
+
+          main = replace_exact(main, r'''We propose \method{}, a validation-assisted sparse topology learner for trained
+heterogeneous predictors. A label-holding active party uses held-out validation
+predictions to estimate predictor reliability and evaluates each feasible
+one-edge extension only after rerunning consensus over the entire tentative
+graph. Beneficial links are greedily retained under edge-budget and degree
+constraints. At inference time, parties exchange class distributions only
+along the selected links and perform reliability-aware consensus. The topology
+can be optimized for active-party, party-local, or joint deployment objectives,
+and may leave weak predictors isolated when connecting them is not beneficial.
+Topology selection is centralized, whereas deployment communication is
+peer-to-peer over the learned graph.''', r'''We propose \method{}, a validation-assisted sparse topology learner for trained
+heterogeneous predictors. A label-holding active party estimates reliability
+from held-out predictions and evaluates each feasible edge only after rerunning
+consensus on the tentative graph. Beneficial links are greedily retained under
+budget and degree constraints. At inference, parties exchange class
+distributions only along selected links. The graph can target active, local, or
+joint objectives and may isolate weak predictors. Selection is centralized;
+deployment communication is peer-to-peer.''', "main method overview")
+
+          main = replace_exact(main, r'''\item We evaluate the method across controlled HGB and heterogeneous
+MovieLens settings, covering communication, label ownership, scalability,
+deployment objectives, and a five-seed frozen-predictor latent-alignment study.''', r'''\item We evaluate the method across controlled HGB and heterogeneous
+MovieLens settings, including cross-benchmark mechanism, deployment,
+scalability, and a five-seed frozen-predictor latent-alignment study.''', "main contribution 4")
+
+          main = replace_exact(main, r'''Table~\ref{tab:positioning} highlights the intended gap. Prediction-level
+compatibility removes the need for a shared latent interface, but does not by
+itself define peer communication paths or optimize party-local post-consensus
+states. Centralized latent fusion provides a stronger-information interface when
+genuine hidden states can be collected and projected, but does not produce a
+sparse peer-to-peer deployment graph. \method{} instead makes this graph the
+object of collaboration.''', r'''Existing work separately studies heterogeneous output interfaces, predictor
+selection, and adaptive communication graphs. Table~\ref{tab:positioning}
+highlights their intersection: prediction-level compatibility removes the need
+for a shared latent interface, while \method{} additionally learns peer paths
+and can optimize party-local post-consensus states. Centralized latent fusion
+provides a stronger-information interface when genuine hidden states can be
+collected and projected, but does not produce a sparse P2P deployment graph.''', "related-work synthesis")
+
+          main = replace_exact(main, r'''Our evaluation addresses five questions.
+\textbf{Q1: Sparse topology.}
+Does learned sparsity improve over dense, fixed matched-sparse, and
+no-collaboration references?
+\textbf{Q2: Heterogeneity.}
+Does the approach transfer to real-data heterogeneous predictor interfaces?
+\textbf{Q3: Mechanism.}
+What does graph structure provide beyond direct participant selection and
+pairwise adaptation?
+\textbf{Q4: Deployment.}
+Do different readout objectives prefer different topologies?
+\textbf{Q5: Interface assumption.}
+When genuine hidden states are available to a centralized fusion module, how
+does sparse prediction-topology learning compare with reliability-selected
+latent alignment?''', r'''Our evaluation asks: \textbf{Q1}, whether learned sparsity improves over dense,
+matched-sparse, and local references; \textbf{Q2}, whether it transfers to
+heterogeneous real-data predictors; \textbf{Q3}, what graphs add beyond
+selection and pairwise adaptation; \textbf{Q4}, how deployment objectives
+change topology; and \textbf{Q5}, how prediction-space topology compares with
+reliability-selected latent alignment.''', "evaluation questions")
+
+          main = replace_exact(main, r'''\paragraph{MovieLens real-data heterogeneous predictor evaluation.}
+The five parties span interaction, profile, temporal, metadata, and genre views
+using MF, MLP, and KNN+MLP predictors with parameter counts
+651,970/130,402/162/825,218/297,938.
+Figure~\ref{fig:movielens-evidence} shows standalone predictor variation and
+the AUC--communication trade-off. Best Single reaches 0.7402 AUC with zero communication; seed-level deltas
+appear in the supplement.
+
+Table~\ref{tab:movielens-main} shows that \method{} reaches 0.7516 ROC-AUC with 3.20M communication,
+compared with 0.7497/10.00M for Full Mesh and 0.7510/5.20M for Adaptive
+Pairwise. Because the absolute AUC differences are small, the main five-party result is one of Pareto efficiency rather than a large predictive gain:
+\method{} uses 68.0\% less communication than Full Mesh and 38.5\% less than
+Adaptive Pairwise. In the controlled 15-party Main and Hard stress settings,
+\method{} reaches 0.7516/0.7498 AUC with 5.2/5.0 links, outperforming 105-link
+Full Mesh and Adaptive Pairwise with roughly 14 links. When many weak predictors
+are present, selective graph construction therefore provides both sparsity and
+a predictive benefit.
+
+\paragraph{Cross-benchmark interpretation.}
+In MovieLens-5, topology learning mainly improves Pareto efficiency, whereas
+under weak-predictor stress it also improves robustness by filtering harmful
+communication.''', r'''\paragraph{MovieLens real-data heterogeneous predictor evaluation.}
+Five parties use interaction, profile, temporal, metadata, and genre views with
+MF, MLP, and KNN+MLP predictors. Figure~\ref{fig:movielens-evidence} shows
+standalone variation and the AUC--communication trade-off. Best Single reaches
+0.7402 AUC with zero communication; paired seed-level deltas are included in the
+submitted package.
+
+\method{} reaches 0.7516 ROC-AUC with 3.20M communication, compared with
+0.7497/10.00M for Full Mesh and 0.7510/5.20M for Adaptive Pairwise. Because the
+AUC margins are small, the five-party result is Pareto efficiency rather than a
+large predictive gain: communication is 68.0\% below Full Mesh and 38.5\% below
+Adaptive Pairwise. In the 15-party Main/Hard stress settings, \method{} reaches
+0.7516/0.7498 AUC with 5.2/5.0 links versus 105 for Full Mesh and roughly 14 for
+Adaptive Pairwise.
+
+\paragraph{Real-data mechanism boundary.}
+Same-state audits reproduce the HGB boundary on MovieLens. Across the five-party
+and 15-party Main/Hard settings, disabling only peer exchange changes active AUC
+by at most 0.00016, but lowers all-party local mean AUC by 0.0038--0.0055 and
+connected-party mean AUC by 0.0085--0.0131; every local comparison is 5/0/0 in
+win/tie/loss. On MovieLens-15, Greedy-Subset-$q$ matches or exceeds \method{}'s
+active AUC while using 62--64\% less communication. Thus the mechanism audit
+separates active-only participant selection from party-local peer exchange.''', "main MovieLens integration")
+
+          main = replace_exact(main, r'''From 5 to 30 parties, candidate evaluations rise from 617 to 41,542 and
+topology time from 0.81 to 81.46 seconds while selected graphs stay near five
+links, confirming exhaustive scoring as the current bottleneck. Minimum-link
+and edge-budget sweeps show that nonempty sparse collaboration emerges without
+a minimum quota: with $m=0$, every ACM/DBLP Hard seed selects a nonempty graph
+(2.6/3.0 edges on average), with DBLP unchanged and ACM higher in this sweep;
+beyond any minimum quota, $B$ remains an upper bound; full results appear in
+the supplement.''', r'''From 5 to 30 parties, exhaustive candidate evaluations rise from 617 to
+41,542, confirming selection as the scalability bottleneck. We therefore test
+two-stage screening with the existing pairwise utility as a cheap pre-ranking
+signal. At 20/30 parties, supported top-20/top-40 shortlists reduce evaluations
+by 88.8/90.5\% and yield $5.2\times$/$8.5\times$ speedups while staying within
+0.10/0.23 percentage points of exhaustive accuracy; effective shortlist size
+remains setting-dependent. Minimum-link and edge-budget sweeps show that
+nonempty sparse collaboration emerges without a minimum quota: with $m=0$,
+every ACM/DBLP Hard seed selects a nonempty graph (2.6/3.0 edges on average);
+beyond any minimum quota, $B$ remains an upper bound. Full results appear in
+the supplement.''', "main scalability result")
+
+          main = replace_exact(main, r'''Global Top-$k$ and same-cardinality subset selection are strong centralized
+choices for active-only deployment. \method{} is most justified when deployment
+also requires party-local predictions, because its sparse links materially
+improve connected parties.''', r'''Global Top-$k$ and same-cardinality subset selection are strong centralized
+choices for active-only deployment. \method{} is most justified when deployment
+also requires party-local predictions: same-state peer exchange materially
+improves connected parties on both HGB and MovieLens.''', "discussion cross-benchmark")
+
+          main = replace_exact(main, r'''Sparse deployment communication scales with the selected edge set, but
+exhaustive candidate scoring remains the current scalability bottleneck. A
+concrete next step is two-stage screening: use a cheap edge-local score to
+shortlist the top-$M$ feasible candidates, then apply the existing whole-graph
+rerun only to that shortlist. We do not report a pruning result here, so its
+accuracy--time trade-off remains an open experiment rather than a claimed
+contribution.''', r'''Exhaustive candidate scoring remains the scalability bottleneck. Two-stage
+pairwise prescreening mitigates it at 20 and 30 parties, but the effective
+shortlist size is setting-dependent and no nontrivial shortlist met the
+main-claim criterion at 15 parties. We therefore do not claim a universally
+lossless pruning rule.''', "limitations pruning")
+
+          main = replace_exact(main, r'''Future work should protect
+exchanged messages, scale topology search, and further characterize the
+performance--interface trade-off between prediction-space peer deployment and
+stronger-information latent fusion.''', r'''Future work should protect
+exchanged messages, develop adaptive screening rules, and further characterize
+the performance--interface trade-off between prediction-space peer deployment
+and stronger-information latent fusion.''', "conclusion future work")
+
+          main_path.write_text(main, encoding="utf-8")
+
+          supp_path = Path("paper/source/supplementary.tex")
+          supp = supp_path.read_text(encoding="utf-8")
+
+          supp = replace_exact(supp, r'''comparison and nested weak-party scaling; Q2 is addressed by MovieLens; Q3--Q4
+by the mechanism and deployment-objective audits; and Q5 by the ACM Hard
+five-seed alignment-reference study.''', r'''comparison and nested weak-party scaling; Q2 is addressed by MovieLens; Q3--Q4
+by the HGB and MovieLens mechanism and deployment-objective audits; and Q5 by
+the ACM Hard five-seed alignment-reference study.''', "supp evidence map")
+
+          movie_insert_marker = r'''\paragraph{Five-party comparison.}
+Table~\ref{tab:supp-movielens-summary} includes Best Single at zero'''
+          movie_insert = r'''\begin{table*}[!t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.2pt}
+\caption{MovieLens same-state peer-exchange intervention over seeds 42--46.
+Condition A is the exact best-validation \method{} state with $K=1$; condition C
+holds the epoch, topology, participant set, reliability vector, prediction
+snapshot, and active readout fixed and changes only $K=1\!\to\!0$. Deltas are
+A--C in ROC-AUC; both local metrics have win/tie/loss 5/0/0 in every setting.}
+\label{tab:supp-movielens-exchange}
+\begin{tabular}{lrrrrrr}
+\toprule
+Setting & Active A & Active C & Active $\Delta$ & All-party local $\Delta$ & Connected local $\Delta$ & Local W/T/L \\
+\midrule
+Five-party & 0.751625 & 0.751462 & $+0.000163$ & $+0.005501$ & $+0.008456$ & 5/0/0 \\
+15-party Main & 0.751627 & 0.751645 & $-0.000017$ & $+0.003849$ & $+0.009935$ & 5/0/0 \\
+15-party Hard & 0.749831 & 0.749760 & $+0.000071$ & $+0.005281$ & $+0.013103$ & 5/0/0 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The active-effect 95\% confidence intervals are
+$[-0.000003,0.000329]$, $[-0.000068,0.000033]$, and
+$[-0.000102,0.000243]$ for five-party, Main, and Hard, respectively. In contrast,
+the all-party local intervals are $[0.003310,0.007693]$,
+$[0.002924,0.004773]$, and $[0.003683,0.006879]$; the connected-party intervals
+are $[0.006638,0.010275]$, $[0.008377,0.011492]$, and
+$[0.010306,0.015900]$. Thus peer exchange has negligible active-readout effect
+at the fixed state but consistently improves local predictions, with the largest
+effect among parties that actually receive messages.
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4.0pt}
+\caption{MovieLens-15 active-only selection boundary. Same-cardinality subset
+methods use the participant count of the corresponding \method{} state, define
+no peer edges, and use validation information only for selection. Communication
+is mean transmitted inference scalars.}
+\label{tab:supp-movielens-selection}
+\begin{tabular}{llrr}
+\toprule
+Setting & Method & Active AUC & Total communication \\
+\midrule
+Main & Global Top-$k$ & 0.750335 & 2,000,420 \\
+Main & Top-Reliability-$q$ & 0.750256 & 2,320,487 \\
+Main & Greedy-Subset-$q$ & \textbf{0.752416} & 2,320,487 \\
+Main & \method{} & 0.751627 & 6,481,361 \\
+\midrule
+Hard & Global Top-$k$ & 0.747258 & 2,000,420 \\
+Hard & Top-Reliability-$q$ & 0.747138 & 2,400,504 \\
+Hard & Greedy-Subset-$q$ & \textbf{0.749847} & 2,400,504 \\
+Hard & \method{} & 0.749831 & 6,401,344 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Greedy-Subset-$q$ exceeds \method{} by 0.000789 AUC on Main and 0.000016 on
+Hard while using 64.2\% and 62.5\% less communication, respectively.
+Selection-only methods do not modify party-local predictions and therefore do
+not receive a local-benefit claim. Together with
+Table~\ref{tab:supp-movielens-exchange}, the MovieLens evidence reproduces the
+HGB interface boundary: active-only deployment is largely selection, whereas
+peer exchange directly changes party-local inference.
+
+\paragraph{Five-party comparison.}
+Table~\ref{tab:supp-movielens-summary} includes Best Single at zero'''
+          supp = replace_exact(supp, movie_insert_marker, movie_insert, "supp MovieLens mechanism insertion")
+
+          supp = replace_exact(supp, r'''\paragraph{Fifteen-party stress settings.}
+These controlled settings support the narrower claim that sparse graph-level
+selection is useful when many weak predictors are available. By themselves,
+they do not establish a monotonic law over noisy-party count; that question is
+tested separately by the nested HGB scaling study. The direct latent-alignment
+study is likewise limited to ACM Hard and frozen local predictors and should
+not be read as evidence that prediction-space collaboration universally
+dominates every possible latent interface.''', r'''\paragraph{Fifteen-party stress settings.}
+These controlled settings show sparse graph-level selection outperforming dense
+and edge-local P2P communication when many weak predictors are available. The
+selection-only audit in Table~\ref{tab:supp-movielens-selection} shows that this
+active-only gain should not be attributed uniquely to peer topology: direct
+subset selection can match it at lower communication. The distinct topology
+claim is instead the same-state local benefit in
+Table~\ref{tab:supp-movielens-exchange}. The stress settings do not establish a
+monotonic law over weak-party count; that question is tested separately by the
+nested HGB scaling study.''', "supp MovieLens stress interpretation")
+
+          supp = replace_exact(supp, r'''\paragraph{Party-count scalability.}
+Table~\ref{tab:supp-scalability} shows that selected graphs remain near five
+links from 5 to 30 parties, while candidate evaluations and topology-selection
+time grow much faster. Sparse deployment therefore scales differently from the
+current selector: exhaustive candidate scoring, rather than deployment
+communication, is the principal bottleneck. A concrete mitigation is a
+two-stage selector that ranks feasible edges with a cheap edge-local score and
+reruns whole-graph consensus only for the top-$M$ shortlist. This is an
+algorithmic path, not an evaluated result in the present paper; a pruning
+accuracy--time curve is therefore future work.''', r'''\paragraph{Party-count scalability and two-stage screening.}
+Table~\ref{tab:supp-scalability} shows that selected graphs remain near five
+links from 5 to 30 parties, while exhaustive candidate evaluation grows much
+faster. We therefore test two-stage screening: the existing Adaptive Pairwise
+edge-local utility ranks feasible candidates cheaply, and unchanged whole-graph
+\method{} scoring is applied only to the top-$M$ shortlist. The $M=\mathrm{all}$
+control exactly reproduces exhaustive selection for all 15 party-count/seed
+runs. Because the screening audit ran in a separate CPU environment, we use
+matched within-run speedups and evaluation reductions rather than compare its
+absolute seconds directly with the historical times in
+Table~\ref{tab:supp-scalability}.''', "supp scalability paragraph")
+
+          prune_insert_marker = r'''\section{Selector Sanity Checks}'''
+          prune_insert = r'''\begin{table*}[!t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.3pt}
+\caption{Top-$M$ prescreening audit on ACM Hard scalability caches. $\Delta$
+accuracy is shortlist minus exhaustive Test@BestVal in fraction units. Speedup
+and evaluation reduction are matched within the same audit environment;
+$M=\mathrm{all}$ rows are reproduction controls. ``Main'' marks the two
+nontrivial settings used in the main-paper claim.}
+\label{tab:supp-pruning}
+\begin{tabular}{rrr rrr l}
+\toprule
+$N$ & $M$ & $\Delta$ Acc. & Speedup & Eval. reduction & Participant agreement & Use \\
+\midrule
+15 & 5  & $+0.006919$ & $9.39\times$  & 94.80\% & 0.787 & Supp. \\
+15 & 10 & $+0.004942$ & $5.89\times$  & 89.57\% & 0.686 & Supp. \\
+15 & 20 & $+0.006919$ & $3.58\times$  & 79.28\% & 0.712 & Supp. \\
+15 & 40 & $+0.005931$ & $1.84\times$  & 58.74\% & 0.786 & Supp. \\
+15 & all & $0$ & $0.89\times$ & 0.00\% & 1.000 & Control \\
+\midrule
+20 & 5  & $+0.007249$ & $11.08\times$ & 97.19\% & 0.616 & Supp. \\
+20 & 10 & $+0.004613$ & $7.51\times$  & 94.28\% & 0.601 & Supp. \\
+20 & 20 & $+0.000988$ & $5.22\times$  & 88.80\% & 0.604 & Main \\
+20 & 40 & $+0.007908$ & $3.40\times$  & 77.70\% & 0.719 & Supp. \\
+20 & all & $0$ & $1.03\times$ & 0.00\% & 1.000 & Control \\
+\midrule
+30 & 5  & $+0.005272$ & $28.63\times$ & 98.84\% & 0.534 & Supp. \\
+30 & 10 & $+0.002636$ & $19.81\times$ & 97.61\% & 0.586 & Supp. \\
+30 & 20 & $+0.005272$ & $13.34\times$ & 95.38\% & 0.501 & Supp. \\
+30 & 40 & $-0.002306$ & $8.46\times$  & 90.48\% & 0.719 & Main \\
+30 & all & $0$ & $1.03\times$ & 0.00\% & 1.000 & Control \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+At 20 parties, top-20 reduces candidate evaluations by 88.8\% and yields a
+$5.22\times$ speedup while differing from exhaustive accuracy by 0.000988
+(0.10 percentage points). At 30 parties, top-40 reduces evaluations by 90.5\%
+and yields an $8.46\times$ speedup with a 0.002306 difference (0.23 points).
+No nontrivial shortlist met the main-claim criterion at 15 parties, and more
+aggressive shortlists are setting-dependent. The result therefore supports
+practical mitigation at the two larger audited scales, not a universal
+lossless-pruning rule.
+
+\section{Selector Sanity Checks}'''
+          supp = replace_exact(supp, prune_insert_marker, prune_insert, "supp pruning insertion")
+
+          supp = replace_exact(supp, r'''For the ACM Hard alignment study, the primary paired comparison is
+Reliability-Selected Project-and-Mean minus \method{}: $-8.50$ points with
+95\% CI $[-10.47,-6.54]$, paired $t$-test
+$p=2.76\times10^{-4}$, and win/tie/loss $0/0/5$. The useful-only latent result
+is an oracle diagnostic and is excluded from deployable-baseline claims. For
+MovieLens, the package contains paired per-seed AUC/communication deltas; the
+paper emphasizes the communication--accuracy trade-off rather than a large AUC
+margin.''', r'''For the ACM Hard alignment study, the primary paired comparison is
+Reliability-Selected Project-and-Mean minus \method{}: $-8.50$ points with
+95\% CI $[-10.47,-6.54]$, paired $t$-test
+$p=2.76\times10^{-4}$, and win/tie/loss $0/0/5$. The useful-only latent result
+is an oracle diagnostic and is excluded from deployable-baseline claims.
+
+For MovieLens, the same-state active effects are at most 0.000163 and all three
+95\% confidence intervals include zero. All-party local gains are
+0.003849--0.005501 and connected-party gains are 0.008456--0.013103; every
+local comparison is 5/0/0 in win/tie/loss and the corresponding confidence
+intervals are strictly positive. Selection-only methods are interpreted only for
+active readout because they do not alter party-local predictions.''', "supp statistical MovieLens")
+
+          supp = replace_exact(supp, r'''\paragraph{Mechanism-audit controls.}
+The $K=0$, fixed-state exchange, fixed-topology trajectory, degree-weighting,
+and same-cardinality subset analyses reuse the same local prediction
+trajectories and labels. Same-state interventions hold the epoch, topology,
+participant set, degree vector, reliability vector, and prediction snapshot
+fixed except for the explicitly ablated component. Direct subset baselines set
+$q=|\mathcal{S}(E)|$ from the corresponding default topology state and use
+validation labels only for ranking or greedy subset selection; test values are
+evaluated only after selection.''', r'''\paragraph{Mechanism-audit controls.}
+The HGB and MovieLens $K=0$ same-state interventions hold the epoch, topology,
+participant set, degree vector, reliability vector, prediction snapshot, and
+readout fixed except for disabling peer exchange. HGB fixed-topology,
+degree-weighting, and same-cardinality subset analyses reuse the same local
+trajectories and labels. MovieLens selection-only baselines likewise set
+$q=|\mathcal{S}(E)|$ from the corresponding \method{} state and use validation
+information only for ranking or greedy subset selection; test values are
+evaluated only after selection.''', "supp mechanism controls")
+
+          supp = replace_exact(supp, r'''\paragraph{Code availability and environment boundary.}
+All source code required to conduct and analyze the reported experiments will be
+released publicly upon publication. The review package contains the raw
+CSV/JSON outputs and referenced analysis paths. Exact GPU/CPU, operating-system,
+and package-version metadata are only partially preserved in the current
+artifact; we do not reconstruct or invent missing environment details.''', r'''\paragraph{Code availability and environment boundary.}
+All source code required to conduct and analyze the reported experiments will be
+released publicly upon publication. The review package contains the raw
+CSV/JSON outputs and referenced analysis paths. The new mechanism/pruning audits
+ran with Python 3.14, PyTorch 2.12.1+cpu, and PyG 2.8.0; matched pruning speedups
+are therefore internally comparable. Exact environments for all historical
+training runs remain only partially preserved, and we do not reconstruct or
+invent missing details.''', "supp environment boundary")
+
+          supp = replace_exact(supp, r'''Consensus-depth sensitivity is implemented by
+\path{experiments/run_k_sensitivity.py}; nested weak-party scaling by
+\path{experiments/run_nested_weak_scaling.py}. The submitted package contains
+raw CSV/JSON outputs, figure scripts, supplementary diagnostics, and a usage
+README.''', r'''Consensus-depth sensitivity is implemented by
+\path{experiments/run_k_sensitivity.py}; nested weak-party scaling by
+\path{experiments/run_nested_weak_scaling.py}; and the MovieLens
+same-state/selection-only plus shortlist-screening audits by
+\path{experiments/accept_evidence_closure_20260710.py}. The submitted package
+contains raw CSV/JSON outputs, figure scripts, supplementary diagnostics, and a
+usage README.''', "supp code paths")
+
+          supp_path.write_text(supp, encoding="utf-8")
+
+          checklist_path = Path("paper/source/ReproducibilityChecklist.tex")
+          checklist = checklist_path.read_text(encoding="utf-8")
+          pattern = re.compile(r'(\\question\{All experimental code used to eliminate or disprove claims is included\}\{\(yes/no/NA\)\}\s*)no')
+          checklist, n = pattern.subn(r'\1yes', checklist, count=1)
+          if n != 1:
+              raise SystemExit("Could not update checklist item 2.8 exactly once")
+          checklist_path.write_text(checklist, encoding="utf-8")
+          PY
+
+      - name: Install TeX and PDF QA tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-science poppler-utils
+
+      - name: Compile main, supplement, and checklist
+        working-directory: paper/source
+        run: |
+          set -euxo pipefail
+          rm -f main.aux main.bbl main.blg main.log main.out main.pdf
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          bibtex main
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+
+          rm -f supplementary.aux supplementary.log supplementary.out supplementary.pdf
+          pdflatex -interaction=nonstopmode -halt-on-error supplementary.tex
+          pdflatex -interaction=nonstopmode -halt-on-error supplementary.tex
+
+          rm -f ReproducibilityChecklist.aux ReproducibilityChecklist.log ReproducibilityChecklist.out ReproducibilityChecklist.pdf
+          pdflatex -interaction=nonstopmode -halt-on-error ReproducibilityChecklist.tex
+          pdflatex -interaction=nonstopmode -halt-on-error ReproducibilityChecklist.tex
+
+      - name: Validate citations, references, and page boundary
+        working-directory: paper/source
+        run: |
+          set -euxo pipefail
+          ! grep -E "Citation .* undefined|Reference .* undefined|There were undefined references" main.log supplementary.log
+          ! grep -F "Section :" <(pdftotext supplementary.pdf -)
+          ! grep -F "(?)" <(pdftotext main.pdf -)
+          pages=$(pdfinfo main.pdf | awk '/^Pages:/ {print $2}')
+          test "$pages" = "8"
+          pdftotext -f 8 -l 8 -layout main.pdf page8.txt
+          grep -q "References" page8.txt
+          first_nonempty=$(sed '/^[[:space:]]*$/d' page8.txt | head -n 1)
+          echo "Page 8 first nonempty line: $first_nonempty"
+          echo "$first_nonempty" | grep -q "References"
+          grep -q "Wolpert" main.bbl
+          grep -q "Caruana" main.bbl
+          grep -q "Jacobs" main.bbl
+
+      - name: Commit validated source changes and remove workflow
+        run: |
+          set -euxo pipefail
+          rm .github/workflows/integrate-accept-evidence.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/source/main.tex paper/source/supplementary.tex paper/source/ReproducibilityChecklist.tex .github/workflows/integrate-accept-evidence.yml
+          git commit -m "Integrate MovieLens mechanism and pruning evidence"
+          git push origin HEAD:${{ github.head_ref }}
