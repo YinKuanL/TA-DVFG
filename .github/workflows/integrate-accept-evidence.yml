@@ -3,6 +3,8 @@ name: Integrate accept evidence
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 permissions:
   contents: write
@@ -11,14 +13,14 @@ jobs:
   integrate-compile-commit:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out PR branch
+      - name: Check out integration branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: integrate-accept-evidence-20260710
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Apply patch program stored in PR workflow
+      - name: Apply patch program stored in integration workflow
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -78,4 +80,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add paper/source/main.tex paper/source/supplementary.tex paper/source/ReproducibilityChecklist.tex .github/workflows/integrate-accept-evidence.yml .integration-trigger
           git commit -m "Integrate MovieLens mechanism and pruning evidence"
-          git push origin HEAD:${{ github.head_ref }}
+          git push origin HEAD:integrate-accept-evidence-20260710
