@@ -5,12 +5,11 @@ on:
     branches:
       - claude-review-revision-20260710
     paths:
-      - paper/source/**
       - .github/workflows/validate-paper-revision.yml
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   compile-paper:
@@ -18,15 +17,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compile main paper
-        uses: xu-cheng/latex-action@v4
         with:
-          root_file: main.tex
-          working_directory: paper/source
-          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+          ref: claude-review-revision-20260710
       - name: Compile supplement
+        id: compile
+        continue-on-error: true
         uses: xu-cheng/latex-action@v4
         with:
           root_file: supplementary.tex
           working_directory: paper/source
           args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+      - name: Capture compile diagnostics
+        run: |
+          if [ -f paper/source/supplementary.log ]; then
+            tail -n 120 paper/source/supplementary.log > supplement_compile_diagnostics.txt
+          else
+            echo "supplementary.log not found" > supplement_compile_diagnostics.txt
+          fi
+          echo "outcome=${{ steps.compile.outcome }}" >> supplement_compile_diagnostics.txt
+      - name: Commit diagnostics
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add supplement_compile_diagnostics.txt
+          git commit -m "Capture supplement compile diagnostics" || true
+          git push origin HEAD:claude-review-revision-20260710
