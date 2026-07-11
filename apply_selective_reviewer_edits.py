@@ -140,3 +140,4 @@ mainout.write_text(main2,encoding='utf-8',newline='\n'); suppout.write_text(supp
 out=root/'outputs/reviewer_closure_20260711'; out.mkdir(parents=True,exist_ok=True)
 (out/'selective_paper_edits.diff').write_text(diff(main,main2,'main.tex','main_reviewer_ready.tex')+'\n'+diff(supp,supp2,'supplementary.tex','supplementary_reviewer_ready.tex'),encoding='utf-8')
 print(mainout); print(suppout)
+# trigger reviewer-ready generation workflow
