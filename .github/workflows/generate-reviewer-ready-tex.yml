@@ -1,0 +1,30 @@
+name: Generate reviewer-ready TeX
+
+on:
+  push:
+    branches: [reviewer-ready-tex]
+    paths:
+      - apply_selective_reviewer_edits.py
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: reviewer-ready-tex
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate complete TeX files
+        run: python apply_selective_reviewer_edits.py
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/source/main_reviewer_ready.tex paper/source/supplementary_reviewer_ready.tex outputs/reviewer_closure_20260711/selective_paper_edits.diff
+          git commit -m "Generate reviewer-ready TeX files" || exit 0
+          git push origin reviewer-ready-tex
