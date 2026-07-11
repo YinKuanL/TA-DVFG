@@ -1,0 +1,171 @@
+name: Build AAAI-27 Code Package (PR)
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PACKAGE_NAME: TA-DVFG_AAAI27_Code_Package
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Assemble review package
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, os, shutil, subprocess
+
+          root = Path.cwd()
+          out = root / os.environ['PACKAGE_NAME']
+          out.mkdir()
+
+          blocked_dirs = {'.git','.github','__pycache__','.pytest_cache','.venv','venv','env','data','data_hgb','data_acm','node_modules','build','dist'}
+          blocked_suffixes = {'.pt','.pth','.pkl','.pickle','.ckpt','.bin','.zip','.7z','.tar','.gz','.log','.aux','.bbl','.blg','.out','.pyc'}
+          code_exts = {'.py','.md','.txt','.json','.csv','.yaml','.yml','.toml','.ini','.cfg','.sh','.ps1','.bat','.ipynb'}
+          output_exts = {'.csv','.json','.md','.txt','.png','.pdf'}
+
+          def blocked(path):
+              rel = path.relative_to(root)
+              return any(part in blocked_dirs for part in rel.parts) or path.suffix.lower() in blocked_suffixes
+
+          def copy_tree(src_rel, dst_rel=None, outputs=False):
+              src = root / src_rel
+              if not src.exists(): return
+              dst_root = Path(dst_rel or src_rel)
+              allowed = output_exts if outputs else code_exts
+              for path in sorted(src.rglob('*')):
+                  if not path.is_file() or blocked(path) or path.suffix.lower() not in allowed: continue
+                  if outputs and path.stat().st_size > 5*1024*1024: continue
+                  dst = out / dst_root / path.relative_to(src)
+                  dst.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(path, dst)
+
+          copy_tree('supplement_experiment_code', '.')
+          for d in ['main experiment','experiments','models','tests','metadata','configs','docs']:
+              copy_tree(d)
+          for d in ['outputs','results']:
+              copy_tree(d, f'reported_outputs/{d}', outputs=True)
+          for name in ['requirements.txt','requirements-experiments.txt','environment.yml','environment.yaml','pyproject.toml','setup.cfg','setup.py','LICENSE','LICENSE.md','LICENSE.txt']:
+              p=root/name
+              if p.exists():
+                  dst=out/'repository'/name; dst.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(p,dst)
+
+          commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          (out/'SOURCE_COMMIT.txt').write_text(commit+'\n',encoding='utf-8')
+
+          required=[
+            'main experiment/ta_dvfg_hgb_reliability.py',
+            'experiments/run_cached_core.py','experiments/run_cached_ablations.py',
+            'experiments/run_cached_minedges_sweep.py','experiments/run_k_sensitivity.py',
+            'experiments/run_nested_weak_scaling.py','experiments/alignment_references.py',
+            'experiments/deployment_objective_analysis.py','experiments/final_analysis.py',
+            'experiments/statistical_tests.py','experiments/final_claims_audit.py',
+            'experiments/config_audit.py','experiments/movielens/prepare_movielens.py',
+            'experiments/movielens/run_movielens_tadvfg.py',
+            'experiments/movielens/extended_movielens_suite.py',
+            'experiments/movielens/aggregate_15party.py',
+            'experiments/movielens/plot_movielens_results.py','models/movielens_parties.py',
+            'tests/test_experiment_plan.py','tests/test_reviewer_defense.py'
+          ]
+          missing=[p for p in required if not (out/p).exists()]
+          closure=sorted({p.relative_to(out).as_posix() for p in out.rglob('*') if p.is_file() and any(t in p.as_posix().lower() for t in ['round2','same_state','same-state','subset','degree_weight'])})
+          audit=['# Package Audit','',f'Source commit: `{commit}`','',f'Required paths present: `{len(required)-len(missing)}/{len(required)}`','']
+          audit += ['## Missing required paths',''] + ([f'- `{p}`' for p in missing] if missing else ['- None'])
+          audit += ['','## Mechanism-closure paths',''] + ([f'- `{p}`' for p in closure] if closure else ['- No closure-keyword path was found; verify these scripts manually.'])
+          audit += ['','## Boundaries','','- Raw datasets, checkpoints, and large caches are excluded.','- The build syntax-checks Python but does not rerun the benchmark suite.','- Historical hardware/OS/exact-version metadata remains partial unless separately documented.']
+          (out/'PACKAGE_AUDIT.md').write_text('\n'.join(audit)+'\n',encoding='utf-8')
+
+          readme=f'''# TA-DVFG AAAI-27 Review Code Package
+
+Paper: **Collaboration without Representation Alignment: Sparse Prediction Topology Learning for Vertical Graph Views**
+
+Source commit: `{commit}`
+
+This package contains the experiment implementations, analysis scripts, tests,
+configuration metadata, and small reported outputs. Raw datasets, checkpoints,
+large prediction caches, and temporary build products are excluded.
+
+## Setup
+
+Use Python 3.9+. Install `requirements.txt` when present. HGB requires PyTorch
+Geometric dataset access. MovieLens requires GroupLens MovieLens 1M under
+`data/movielens/ml-1m/`.
+
+## Canonical settings
+
+Seeds: `42,43,44,45,46`. HGB selector: `B=15`, `d_max=2`, `m=5`,
+`tau=0.001`, `K=1`, `eta=0.85`, refresh every 20 epochs.
+
+## Main entry points
+
+- `experiments/run_cached_core.py`
+- `experiments/run_cached_ablations.py`
+- `experiments/run_cached_minedges_sweep.py`
+- `experiments/run_k_sensitivity.py`
+- `experiments/run_nested_weak_scaling.py`
+- `experiments/alignment_references.py`
+- `experiments/deployment_objective_analysis.py`
+- `experiments/movielens/run_movielens_tadvfg.py`
+- `experiments/final_analysis.py`
+- `experiments/statistical_tests.py`
+- `experiments/config_audit.py`
+- `experiments/final_claims_audit.py`
+
+## Claim boundary
+
+Direct subset selection is the stronger active-only interface in the audited
+Hard settings. Sparse peer exchange is distinctly justified for party-local or
+joint deployment. TA-DVFG is not a formal privacy mechanism or a fully serverless
+end-to-end VFGL protocol.
+
+Read `PACKAGE_AUDIT.md`, then verify integrity with `sha256sum -c SHA256SUMS`.
+'''
+          (out/'README.md').write_text(readme,encoding='utf-8')
+          if not any(p.is_file() for p in out.rglob('LICENSE*')):
+              (out/'LICENSE_STATUS.md').write_text('# License status\n\nNo license file was found. Add the intended public-release license before publication.\n',encoding='utf-8')
+
+          check=subprocess.run(['python','-m','compileall','-q',str(out)],capture_output=True,text=True)
+          (out/'SYNTAX_CHECK.txt').write_text(f'return_code={check.returncode}\nstdout:\n{check.stdout}\nstderr:\n{check.stderr}\n',encoding='utf-8')
+          if check.returncode: raise SystemExit('syntax check failed')
+          for p in list(out.rglob('__pycache__')): shutil.rmtree(p)
+          for p in list(out.rglob('*.pyc')): p.unlink()
+
+          manifest=[]
+          for p in sorted(out.rglob('*')):
+              if p.is_file(): manifest.append({'path':p.relative_to(out).as_posix(),'size_bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'MANIFEST.json').write_text(json.dumps({'package':out.name,'source_commit':commit,'missing_required_paths':missing,'files':manifest},indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          sums=[]
+          for p in sorted(out.rglob('*')):
+              if p.is_file() and p.name!='SHA256SUMS': sums.append(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.relative_to(out).as_posix()}")
+          (out/'SHA256SUMS').write_text('\n'.join(sums)+'\n',encoding='utf-8')
+          print(f'files={sum(1 for p in out.rglob("*") if p.is_file())} missing={len(missing)}')
+          PY
+
+      - name: Archive package
+        run: |
+          zip -r -9 "${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"
+          tar -czf "${PACKAGE_NAME}.tar.gz" "${PACKAGE_NAME}"
+          sha256sum "${PACKAGE_NAME}.zip" "${PACKAGE_NAME}.tar.gz" > ARCHIVE_SHA256SUMS
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TA-DVFG_AAAI27_Code_Package
+          path: |
+            TA-DVFG_AAAI27_Code_Package.zip
+            TA-DVFG_AAAI27_Code_Package.tar.gz
+            ARCHIVE_SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
