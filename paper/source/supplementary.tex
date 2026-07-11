@@ -101,8 +101,8 @@ rather than naturally occurring 15-organization federations.
 \section{Evaluation Questions and Construction Details}
 
 The experiments are organized around five questions: \textbf{Q1}, whether
-learned sparsity improves over dense, communication-matched, and
-no-collaboration references; \textbf{Q2}, whether the approach transfers to
+learned sparsity improves over dense, communication-matched, adaptive,
+and centralized prediction-selection references; \textbf{Q2}, whether the approach transfers to
 explicitly heterogeneous real-world predictors; \textbf{Q3}, what graph
 structure provides beyond direct participant selection and edge-local
 adaptation; \textbf{Q4}, whether active, party-local, and joint deployments
@@ -207,6 +207,13 @@ P_i^{(k+1)}(E)=
 Isolated parties retain their current prediction. The reported configuration
 uses one consensus step and self-weight $\eta=0.85$.
 
+\paragraph{Output-calibration boundary.}
+Compatible class semantics make prediction vectors dimensionally exchangeable,
+but do not guarantee identical calibration across independently trained
+predictors. The reliability scores above are global validation metrics used for
+weighting; they are not a per-party calibration transform. Calibration-aware
+consensus is outside the present method definition.
+
 The topology affects deployment through two distinct mechanisms. First, it
 determines the active-readout participant set and topology-dependent weights.
 Second, when $K>0$, it defines the peer links over which predictions are
@@ -245,6 +252,12 @@ s_{\mathrm{local}}(E)&=\frac{1}{N}\sum_{i=1}^{N}
 s_{\mathrm{joint}}(E)&=\lambda s_{\mathrm{active}}(E)
 +(1-\lambda)s_{\mathrm{local}}(E).
 \end{align}
+
+\paragraph{Validation-label flow.}
+In the primary cached protocol, the held-out validation split supplies labels
+for reliability estimation, candidate-topology scoring, and validation-based
+epoch selection. Test labels are not used for any of these decisions and are
+reserved for final reporting.
 
 \subsection{Greedy Topology Selection}
 
@@ -461,17 +474,52 @@ selection criteria. No method receives a different local predictor realization;
 method-specific topology rules differ by design.
 
 \paragraph{Adaptive P2P baselines.}
-Adaptive Pairwise assigns each candidate edge a precomputed edge-local utility
-from pair-level predictive quality and reliability signals. Candidate edges are
-sorted by that utility and admitted in descending order subject to the
-configured edge-budget and degree constraints. Adaptive Complementarity uses
-the same ranked admission procedure but augments the edge-local criterion with
-pair gain, corrective and disagreement signals, and a penalty for jointly
-incorrect behavior. In the cached HGB path used here, embeddings are not stored,
-so embedding-diversity terms are inactive. Neither adaptive baseline inserts a
-candidate into the current graph, reruns whole-graph consensus, and then
-recomputes deployment utility; neither uses \method{}'s graph-level
-gain-threshold stopping rule.
+Let $p_i(x)$ be party $i$'s validation probability vector and
+$\widehat y_i(x)=\arg\max_c p_{ic}(x)$. For validation set
+$\mathcal{D}_{\mathrm{val}}$, define the standalone accuracy $a_i$, pair-average
+accuracy $a_{ij}$, reliability $\rho_{ij}$, and pair gain $g_{ij}$ as
+\begin{align}
+a_i &= \frac{1}{|\mathcal{D}_{\mathrm{val}}|}
+\sum_x \mathbf{1}[\widehat y_i(x)=y(x)], \nonumber\\
+a_{ij} &= \frac{1}{|\mathcal{D}_{\mathrm{val}}|}
+\sum_x \mathbf{1}\!\left[
+\arg\max_c \tfrac12\bigl(p_{ic}(x)+p_{jc}(x)\bigr)=y(x)
+\right], \nonumber\\
+\rho_{ij} &= \tfrac12(a_i+a_j),
+\qquad
+g_{ij}=a_{ij}-\max(a_i,a_j).
+\end{align}
+We further use the corrective rate $c_{ij}$ (exactly one endpoint is correct),
+the jointly-wrong rate $w_{ij}$, and the mean Jensen--Shannon disagreement
+$d_{ij}$:
+\begin{align}
+c_{ij} &= \frac{1}{|\mathcal{D}_{\mathrm{val}}|}
+\sum_x \mathbf{1}[\widehat y_i(x)=y(x)\ \mathrm{xor}\
+\widehat y_j(x)=y(x)], \nonumber\\
+w_{ij} &= \frac{1}{|\mathcal{D}_{\mathrm{val}}|}
+\sum_x \mathbf{1}[\widehat y_i(x)\ne y(x),\widehat y_j(x)\ne y(x)],
+\nonumber\\
+d_{ij} &= \frac{1}{|\mathcal{D}_{\mathrm{val}}|}
+\sum_x \operatorname{JSD}\!\left(p_i(x),p_j(x)\right).
+\end{align}
+The production cached-path utilities are
+\begin{align}
+u^{\mathrm{pair}}_{ij}
+&=0.45a_{ij}+0.25\rho_{ij}+0.05d_{ij}, \nonumber\\
+u^{\mathrm{comp}}_{ij}
+&=0.45a_{ij}+0.20g_{ij}+0.25\rho_{ij}
+ +0.30c_{ij}+0.05d_{ij}-0.20w_{ij}.
+\end{align}
+Embedding-diversity terms are inactive because the cached HGB and MovieLens
+paths do not store embeddings. Each unordered pair is scored once, candidates
+are sorted by descending utility, and edges are admitted in that fixed order
+subject to the configured edge budget and degree limit. Exact utility ties are
+resolved by descending party indices, matching the implementation's reverse
+sort over $(u_{ij},i,j)$. Neither baseline inserts a candidate, reruns
+whole-graph consensus, and recomputes deployment utility; neither uses
+\method{}'s graph-level gain-threshold stopping rule. After construction, both
+use the same consensus and topology-constrained active readout as the other P2P
+methods.
 
 \paragraph{Matched sparse constructors.}
 The matched controls use deterministic run-level constructors. Ring Matched

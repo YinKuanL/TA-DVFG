@@ -288,10 +288,10 @@ P_i=\operatorname{softmax}(\psi_i(H_i)),
 where $H_i\in\mathcal{H}_i$ may lie in a party-specific latent space and
 $P_i[v]\in\Delta^C$ is a class distribution for target $v$. We assume
 aligned targets, a shared task, and compatible output semantics, but not a
-common encoder family, hidden dimension, or latent coordinate system. We also
-do not assume identical confidence calibration across parties; predictor
-reliability is estimated from held-out validation performance rather than from
-raw confidence alone.
+common encoder family, hidden dimension, or latent coordinate system. We do not require identical raw-confidence scales for reliability ranking:
+predictor reliability is estimated from held-out validation performance rather
+than from raw confidence alone. This weighting is not a per-party calibration
+procedure.
 
 Let $G_c=(\mathcal{P},E_c)$ be an undirected candidate communication graph.
 A selected edge set $E\subseteq E_c$ determines which parties can directly
@@ -547,8 +547,8 @@ Full Mesh & $85.96\pm2.30$ & $75.52\pm5.04$ & $90.86\pm0.49$ & $88.01\pm1.45$ & 
 
 Our evaluation addresses five questions.
 \textbf{Q1: Sparse topology.}
-Does learned sparsity improve over dense, fixed matched-sparse, and
-no-collaboration references?
+Does learned sparsity improve over dense, fixed matched-sparse, adaptive,
+and centralized prediction-selection references?
 \textbf{Q2: Heterogeneity.}
 Does the approach transfer to real-data heterogeneous predictor interfaces?
 \textbf{Q3: Mechanism.}
@@ -586,9 +586,10 @@ the methods with many weak predictors. All experiments use seeds 42--46. HGB
 reports Test@BestVal accuracy, whereas MovieLens reports ROC-AUC.
 
 Global Top-$k$ is the strongest centralized prediction-selection reference.
-Best Single is the no-collaboration reference, while Ring, Random, Expander,
-Adaptive Pairwise, Adaptive Complementarity, and Full Mesh serve as P2P
-comparisons. Oracle Matched in Table~\ref{tab:hgb-main} is a post-hoc test-mean upper
+Ring, Random, Expander, Adaptive Pairwise, Adaptive Complementarity, and Full
+Mesh serve as P2P comparisons. Best Single is retained as the no-collaboration
+reference for MovieLens, where it is evaluated under the same chronological
+split. Oracle Matched in Table~\ref{tab:hgb-main} is a post-hoc test-mean upper
 envelope over Ring, Random, and Expander and is therefore not a deployable
 baseline.
 
@@ -599,9 +600,11 @@ $\tau=0.001$, and a 20-epoch topology update interval. Local predictors train
 independently; each scheduled refresh uses held-out validation predictions to
 update the topology without back-propagating through the selector, and inference
 uses the current graph for prediction exchange and consensus. Global Top-$k$
-uses $k=5$. We audited all 90 headline HGB result rows and verified that their
-resolved configurations matched these defaults. The full audit is provided in
-the supplementary material.
+uses $k=5$. The primary protocol uses the held-out validation split for
+reliability estimation, candidate-topology scoring, and validation-based epoch
+selection; test labels remain reserved for final reporting. We audited all 90
+headline HGB result rows and verified that their resolved configurations matched
+these defaults. The full audit is provided in the supplementary material.
 
 
 
@@ -810,9 +813,8 @@ the supplement.
 \section{Discussion}
 
 Global Top-$k$ and same-cardinality subset selection are strong centralized
-choices for active-only deployment. \method{} is most justified when deployment
-also requires party-local predictions, because its sparse links materially
-improve connected parties.
+choices for active-only deployment, whereas \method{} is most justified when
+party-local predictions are also required.
 
 The latent-alignment study sharpens this interface distinction. Weak parties
 hurt naive all-party fusion, while validation-based selection recovers much of
@@ -837,7 +839,9 @@ communication on the audited Hard settings. The learned graph is therefore most
 valuable when party-local inference is also required. Second, reducing the
 collaboration interface to predictions does not provide a privacy guarantee:
 predictions, validation signals, and optional logit gradients may still leak
-information. Third, HGB provides controlled graph-view constructions, while
+information. Compatible output semantics do not ensure calibrated predictors, and our
+reliability weighting does not explicitly calibrate party outputs. Third, HGB provides controlled
+graph-view constructions, while
 MovieLens-5 uses real recommendation data with constructed heterogeneous party
 interfaces rather than a naturally occurring five-organization federation; the
 15-party MovieLens settings are controlled weak-predictor stress tests.
@@ -851,8 +855,7 @@ Finally, nested weak-party scaling shows that \method{}'s advantage over
 dense and edge-local P2P methods widens as controlled weak predictors are
 added. This trend should not be extrapolated to naturally occurring parties
 or to architectural heterogeneity, for which we do not establish a monotonic
-relationship. Because the primary results use only five seeds, non-significant paired
-tests should not be interpreted as evidence of equivalence.
+relationship. Because the primary results use only five seeds, non-significant tests should not be interpreted as evidence of equivalence.
 
 Sparse deployment communication scales with the selected edge set, but
 exhaustive candidate scoring remains the current scalability bottleneck. A
@@ -862,21 +865,15 @@ rerun only to that shortlist. We do not report a pruning result here, so its
 accuracy--time trade-off remains an open experiment rather than a claimed
 contribution.
 
-All source code required to conduct and analyze the reported experiments will be
-released publicly upon publication; the review package contains the referenced
-analysis scripts and raw outputs. Exact hardware and software-version metadata
-are only partially preserved in the current artifact and remain a
-reproducibility limitation.
+The review package contains the referenced scripts and raw outputs, while exact
+hardware and software-version metadata remain partially preserved.
 
 In summary, \method{} reframes vertical graph-view collaboration as sparse
 prediction-space deployment. Prediction space determines what heterogeneous
 predictors can share; deployment requirements determine whether collaboration
-needs only participant selection or a learned peer topology. Direct subset
-selection is a strong active-only alternative, whereas sparse peer exchange
-materially improves party-local predictions. Future work should protect
-exchanged messages, scale topology search, and further characterize the
-performance--interface trade-off between prediction-space peer deployment and
-stronger-information latent fusion.
+needs only participant selection or a learned peer topology. Direct subset selection is a strong active-only alternative, whereas sparse peer
+exchange benefits party-local prediction. Future work should protect messages,
+scale topology search, and study the trade-off with latent fusion.
 
 \bibliography{references}
 \end{document}
