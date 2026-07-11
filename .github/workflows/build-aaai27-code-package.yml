@@ -1,0 +1,422 @@
+name: Build AAAI-27 Code Package
+
+on:
+  push:
+    branches:
+      - submission-code-package-20260711
+    paths:
+      - .github/workflows/build-aaai27-code-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PACKAGE_NAME: TA-DVFG_AAAI27_Code_Package
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build clean submission package
+        shell: bash
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import os
+          import shutil
+          import subprocess
+          from pathlib import Path
+
+          repo = Path.cwd()
+          package_name = os.environ["PACKAGE_NAME"]
+          package = repo / package_name
+          if package.exists():
+              shutil.rmtree(package)
+          package.mkdir(parents=True)
+
+          allowed_code_exts = {
+              ".py", ".md", ".txt", ".json", ".csv", ".yaml", ".yml",
+              ".toml", ".ini", ".cfg", ".sh", ".ps1", ".bat", ".ipynb",
+          }
+          allowed_output_exts = {".csv", ".json", ".md", ".txt", ".png", ".pdf"}
+          blocked_parts = {
+              ".git", ".github", "__pycache__", ".pytest_cache", ".mypy_cache",
+              ".ruff_cache", ".venv", "venv", "env", "data", "data_hgb",
+              "data_acm", "node_modules", "build", "dist",
+          }
+          blocked_suffixes = {
+              ".pt", ".pth", ".pkl", ".pickle", ".ckpt", ".bin", ".zip",
+              ".tar", ".gz", ".7z", ".log", ".aux", ".bbl", ".blg", ".out",
+          }
+
+          def blocked(path: Path) -> bool:
+              rel = path.relative_to(repo)
+              if any(part in blocked_parts for part in rel.parts):
+                  return True
+              if path.suffix.lower() in blocked_suffixes:
+                  return True
+              return False
+
+          def copy_file(src: Path, dst_rel: Path) -> None:
+              if blocked(src) or not src.is_file():
+                  return
+              dst = package / dst_rel
+              dst.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(src, dst)
+
+          def copy_tree_filtered(src_rel: str, dst_rel: str | None = None, *, output_mode: bool = False) -> None:
+              src = repo / src_rel
+              if not src.exists():
+                  return
+              root_dst = Path(dst_rel or src_rel)
+              for path in sorted(src.rglob("*")):
+                  if not path.is_file() or blocked(path):
+                      continue
+                  if output_mode:
+                      if path.suffix.lower() not in allowed_output_exts:
+                          continue
+                      # Keep review artifacts compact and avoid accidental large caches.
+                      if path.stat().st_size > 5 * 1024 * 1024:
+                          continue
+                  else:
+                      if path.suffix.lower() not in allowed_code_exts:
+                          continue
+                  rel = path.relative_to(src)
+                  copy_file(path, root_dst / rel)
+
+          # Start from the previously cleaned supplement package when present.
+          if (repo / "supplement_experiment_code").exists():
+              copy_tree_filtered("supplement_experiment_code", ".")
+
+          # Overlay current repository implementations so later mechanism-closure
+          # scripts are not omitted from the review package.
+          for src_rel in [
+              "main experiment",
+              "experiments",
+              "models",
+              "tests",
+              "metadata",
+              "configs",
+              "docs",
+          ]:
+              copy_tree_filtered(src_rel)
+
+          # Include dependency declarations and repository-level usage material.
+          for filename in [
+              "README.md",
+              "requirements.txt",
+              "requirements-experiments.txt",
+              "environment.yml",
+              "environment.yaml",
+              "pyproject.toml",
+              "setup.cfg",
+              "setup.py",
+              "LICENSE",
+              "LICENSE.md",
+              "LICENSE.txt",
+          ]:
+              path = repo / filename
+              if path.exists():
+                  copy_file(path, Path("repository") / filename)
+
+          # Keep small raw outputs and audit reports needed to verify paper tables,
+          # while excluding model caches and raw datasets.
+          for src_rel in ["outputs", "results"]:
+              copy_tree_filtered(src_rel, Path("reported_outputs") / src_rel, output_mode=True)
+
+          source_commit = subprocess.check_output(
+              ["git", "rev-parse", "HEAD"], text=True
+          ).strip()
+          (package / "SOURCE_COMMIT.txt").write_text(source_commit + "\n", encoding="utf-8")
+
+          required = {
+              "Core HGB engine": [
+                  "main experiment/ta_dvfg_hgb_reliability.py",
+              ],
+              "HGB cached core": [
+                  "experiments/run_cached_core.py",
+                  "experiments/experiment_plan.py",
+              ],
+              "HGB selector and robustness": [
+                  "experiments/run_cached_ablations.py",
+                  "experiments/run_cached_minedges_sweep.py",
+                  "experiments/run_k_sensitivity.py",
+                  "experiments/run_nested_weak_scaling.py",
+              ],
+              "Mechanism and deployment analysis": [
+                  "experiments/deployment_objective_analysis.py",
+              ],
+              "Latent-alignment references": [
+                  "experiments/alignment_references.py",
+              ],
+              "MovieLens suite": [
+                  "experiments/movielens/prepare_movielens.py",
+                  "experiments/movielens/run_movielens_tadvfg.py",
+                  "experiments/movielens/extended_movielens_suite.py",
+                  "experiments/movielens/aggregate_15party.py",
+                  "experiments/movielens/plot_movielens_results.py",
+                  "models/movielens_parties.py",
+              ],
+              "Final analysis and statistics": [
+                  "experiments/final_analysis.py",
+                  "experiments/statistical_tests.py",
+                  "experiments/final_claims_audit.py",
+                  "experiments/config_audit.py",
+              ],
+              "Tests": [
+                  "tests/test_experiment_plan.py",
+                  "tests/test_reviewer_defense.py",
+              ],
+          }
+
+          lines = [
+              "# Package Audit",
+              "",
+              f"Source commit: `{source_commit}`",
+              "",
+              "This audit checks file presence only. It does not claim that the full",
+              "benchmark suite was rerun while building the package.",
+              "",
+              "| Component | Status | Located paths |",
+              "|---|---|---|",
+          ]
+          missing_required: list[str] = []
+          for component, candidates in required.items():
+              located = [p for p in candidates if (package / p).exists()]
+              missing = [p for p in candidates if not (package / p).exists()]
+              status = "PASS" if not missing else ("PARTIAL" if located else "MISSING")
+              if missing:
+                  missing_required.extend(missing)
+              display = "<br>".join(
+                  [f"`{p}`" for p in located]
+                  + [f"missing: `{p}`" for p in missing]
+              )
+              lines.append(f"| {component} | {status} | {display} |")
+
+          # Explicitly report later closure material discovered by directory name.
+          closure_paths = [
+              p.relative_to(package).as_posix()
+              for p in package.rglob("*")
+              if p.is_file() and any(
+                  token in p.as_posix().lower()
+                  for token in ["round2", "same_state", "same-state", "subset", "degree_weight"]
+              )
+          ]
+          lines.extend([
+              "",
+              "## Later mechanism-closure material",
+              "",
+          ])
+          if closure_paths:
+              lines.extend(f"- `{p}`" for p in sorted(set(closure_paths)))
+          else:
+              lines.append(
+                  "- No path matched the closure keywords. Verify same-state exchange, "
+                  "fixed-trajectory, degree-weighting, and same-cardinality subset scripts manually."
+              )
+
+          lines.extend([
+              "",
+              "## Known reproducibility boundaries",
+              "",
+              "- Raw HGB and MovieLens datasets are not bundled.",
+              "- Model checkpoints and cached prediction tensors are not bundled.",
+              "- Exact historical CPU/GPU, RAM, OS, and complete package-version metadata remain partial unless separately documented.",
+              "- The package builder does not fabricate missing environment or license information.",
+          ])
+          (package / "PACKAGE_AUDIT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+          readme = f"""# TA-DVFG AAAI-27 Review Code Package
+
+Paper: **Collaboration without Representation Alignment: Sparse Prediction Topology Learning for Vertical Graph Views**
+
+Source commit: `{source_commit}`
+
+## Scope
+
+This package contains the code, lightweight tests, configuration metadata, small
+raw CSV/JSON outputs, and analysis material used for the reported TA-DVFG
+experiments. Raw datasets, large caches, checkpoints, temporary files, and LaTeX
+build products are intentionally excluded.
+
+TA-DVFG is an inference-stage topology/readout mechanism over independently
+trained predictors. It is not a formal privacy mechanism and is not presented as
+a fully serverless end-to-end VFGL protocol.
+
+## Package layout
+
+- `main experiment/`: core HGB engine.
+- `experiments/`: HGB, mechanism, robustness, latent-alignment, and MovieLens runners.
+- `models/`: heterogeneous MovieLens predictors.
+- `tests/`: lightweight configuration and protocol tests.
+- `metadata/`: configuration and result-provenance files.
+- `reported_outputs/`: small CSV/JSON/Markdown/figure artifacts found in the repository.
+- `PACKAGE_AUDIT.md`: presence audit and known boundaries.
+- `MANIFEST.json` and `SHA256SUMS`: package integrity records.
+
+## Setup
+
+Use Python 3.9 or later. Install the dependency file included in this package,
+when available:
+
+```bash
+pip install -r requirements.txt
+```
+
+HGB experiments require PyTorch Geometric dataset access. MovieLens experiments
+require GroupLens MovieLens 1M under `data/movielens/ml-1m/`.
+
+## Canonical seeds and selector defaults
+
+Headline experiments use seeds `42,43,44,45,46`. The audited HGB configuration is
+`B=15`, `d_max=2`, `m=5`, `tau=0.001`, `K=1`, self-weight `eta=0.85`, and a
+20-epoch topology refresh interval.
+
+## Main reproduction entry points
+
+```bash
+# HGB cached-core benchmark
+python experiments/run_cached_core.py --datasets ACM DBLP IMDB --seeds 42,43,44,45,46
+
+# Selector and mechanism sensitivity
+python experiments/run_cached_ablations.py
+python experiments/run_cached_minedges_sweep.py
+python experiments/run_k_sensitivity.py
+python experiments/run_nested_weak_scaling.py
+
+# Latent-alignment boundary reference
+python experiments/alignment_references.py --dataset ACM --setting hard --seeds 42,43,44,45,46
+
+# MovieLens 1M
+python experiments/movielens/prepare_movielens.py --data-dir data/movielens
+python experiments/movielens/run_movielens_tadvfg.py --data-dir data/movielens/ml-1m --output-dir outputs/movielens --seeds 42,43,44,45,46 --num-parties 5 --setting five --local-epochs 8
+python experiments/movielens/run_movielens_tadvfg.py --data-dir data/movielens/ml-1m --output-dir outputs/movielens_main15 --seeds 42,43,44,45,46 --setting main --local-epochs 8
+python experiments/movielens/run_movielens_tadvfg.py --data-dir data/movielens/ml-1m --output-dir outputs/movielens_hard15 --seeds 42,43,44,45,46 --setting hard --local-epochs 8
+
+# Aggregation, statistical tests, and claim/config audits
+python experiments/final_analysis.py
+python experiments/statistical_tests.py
+python experiments/config_audit.py
+python experiments/final_claims_audit.py
+```
+
+## Result interpretation boundary
+
+- Direct subset selection is the stronger lightweight choice for active-only aggregation in the audited Hard settings.
+- Sparse peer exchange is distinctly justified for party-local or joint deployment.
+- MovieLens-5 primarily supports an AUC--communication Pareto claim, not a large accuracy-gain claim.
+- Controlled weak-party settings are stress constructions and should not be read as naturally occurring federations.
+
+## Data and privacy
+
+Test labels are reserved for final reporting. Prediction sharing, validation
+signals, and optional logit gradients may leak information; no cryptographic or
+differential-privacy guarantee is claimed.
+
+## Integrity
+
+Verify package contents with:
+
+```bash
+sha256sum -c SHA256SUMS
+```
+
+See `PACKAGE_AUDIT.md` before submission. Any `MISSING` or `PARTIAL` line should
+remain reflected conservatively in the reproducibility checklist.
+"""
+          (package / "README.md").write_text(readme, encoding="utf-8")
+
+          license_files = [p for p in package.rglob("LICENSE*") if p.is_file()]
+          if not license_files:
+              (package / "LICENSE_STATUS.md").write_text(
+                  "# License status\n\n"
+                  "No license file was found in the audited repository snapshot. "
+                  "Select and add the intended public-release license before claiming "
+                  "that the publication package is already licensed for public research use.\n",
+                  encoding="utf-8",
+              )
+
+          # Compile Python files to catch syntax errors without importing optional dependencies.
+          result = subprocess.run(
+              ["python", "-m", "compileall", "-q", str(package)],
+              text=True,
+              capture_output=True,
+          )
+          (package / "SYNTAX_CHECK.txt").write_text(
+              f"return_code={result.returncode}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}\n",
+              encoding="utf-8",
+          )
+          if result.returncode != 0:
+              raise SystemExit("Python syntax check failed")
+
+          # Remove bytecode created by compileall.
+          for pycache in list(package.rglob("__pycache__")):
+              shutil.rmtree(pycache)
+          for pyc in list(package.rglob("*.pyc")):
+              pyc.unlink()
+
+          files = []
+          for path in sorted(package.rglob("*")):
+              if not path.is_file():
+                  continue
+              rel = path.relative_to(package).as_posix()
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              files.append({"path": rel, "size_bytes": path.stat().st_size, "sha256": digest})
+
+          (package / "MANIFEST.json").write_text(
+              json.dumps(
+                  {
+                      "package": package_name,
+                      "source_commit": source_commit,
+                      "file_count_before_manifest": len(files),
+                      "files": files,
+                  },
+                  indent=2,
+                  sort_keys=True,
+              ) + "\n",
+              encoding="utf-8",
+          )
+
+          # Recompute checksums including the manifest itself, but exclude SHA256SUMS.
+          checksum_lines = []
+          for path in sorted(package.rglob("*")):
+              if not path.is_file() or path.name == "SHA256SUMS":
+                  continue
+              rel = path.relative_to(package).as_posix()
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              checksum_lines.append(f"{digest}  {rel}")
+          (package / "SHA256SUMS").write_text("\n".join(checksum_lines) + "\n", encoding="utf-8")
+
+          if missing_required:
+              print("WARNING: required paths missing:")
+              for item in missing_required:
+                  print(" -", item)
+          print(f"Built {package} with {sum(1 for p in package.rglob('*') if p.is_file())} files")
+          PY
+
+      - name: Create archives
+        shell: bash
+        run: |
+          zip -r -9 "${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"
+          tar -czf "${PACKAGE_NAME}.tar.gz" "${PACKAGE_NAME}"
+          sha256sum "${PACKAGE_NAME}.zip" "${PACKAGE_NAME}.tar.gz" > ARCHIVE_SHA256SUMS
+
+      - name: Upload code package
+        uses: actions/upload-artifact@v4
+        with:
+          name: TA-DVFG_AAAI27_Code_Package
+          path: |
+            TA-DVFG_AAAI27_Code_Package.zip
+            TA-DVFG_AAAI27_Code_Package.tar.gz
+            ARCHIVE_SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
