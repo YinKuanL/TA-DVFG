@@ -7,3 +7,4 @@ torch-geometric
 matplotlib
 ogb
 openpyxl
+pytest
