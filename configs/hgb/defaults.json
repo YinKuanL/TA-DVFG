@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "scope": "HGB cached-core headline runs",
+  "source": "experiments/experiment_plan.py::common_parameters and saved metrics_config.json",
+  "datasets": ["ACM", "DBLP", "IMDB"],
+  "settings": {
+    "main": {"num_parties": 15, "useful_parties": 6, "weak_parties": 9},
+    "hard": {"num_parties": 15, "useful_parties": 3, "weak_parties": 12}
+  },
+  "seeds": [42, 43, 44, 45, 46],
+  "selector": {"B": 15, "d_max": 2, "m": 5, "tau": 0.001},
+  "consensus": {
+    "K": 1,
+    "eta": 0.85,
+    "reliability_floor": 0.001,
+    "reliability_exponent": 1.0,
+    "degree_exponent": 0.5
+  },
+  "topology_refresh_epochs": 20,
+  "weak_party_construction": {
+    "feature_row_permutation": true,
+    "gaussian_noise_scale": 1.0,
+    "random_graph_degree": 4,
+    "shuffle_party_positions_per_seed": true
+  },
+  "selection_metric": "Test@BestVal"
+}
+

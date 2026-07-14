@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "scope": "MovieLens 1M",
+  "source": "experiments/movielens/run_movielens_tadvfg.py",
+  "seeds": [42, 43, 44, 45, 46],
+  "target": {"unit": "observed rating row", "positive": "rating >= 4", "negative": "rating in 1..3", "negative_sampling": false},
+  "order": ["timestamp", "user_id", "movie_id"],
+  "split": {"train": 0.7, "validation": 0.1, "test": 0.2, "mode": "chronological"},
+  "fit_statistics_on": "train only",
+  "selector": {"B": 15, "m": 5, "tau": 0.0},
+  "consensus": {"K": 1, "eta": 0.85},
+  "metrics": ["ROC-AUC", "accuracy", "F1", "NDCG@10", "communication_scalars"]
+}
+

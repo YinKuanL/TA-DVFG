@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "source": "experiments/run_k_sensitivity.py",
+  "datasets": ["ACM", "DBLP"],
+  "setting": "hard",
+  "seeds": [42, 43, 44, 45, 46],
+  "K": [1, 2, 3],
+  "independent_topology_reselection": true,
+  "outputs": ["accuracy", "K_hop_reachability", "communication", "tables", "figures"]
+}
+

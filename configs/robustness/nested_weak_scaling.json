@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "source": "experiments/run_nested_weak_scaling.py",
+  "datasets": ["ACM", "DBLP"],
+  "seeds": [42, 43, 44, 45, 46],
+  "useful_parties": 3,
+  "weak_parties": [0, 2, 5, 10, 15],
+  "total_parties": [3, 5, 8, 13, 18],
+  "methods": ["adaptive_graph_val", "full_mesh"],
+  "selector": {"B": 15, "d_max": 2, "m": 5, "tau": 0.001},
+  "cache_root": "results/nested_weak_cache"
+}
+

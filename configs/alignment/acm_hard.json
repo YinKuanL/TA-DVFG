@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "source": "experiments/alignment_references.py",
+  "dataset": "ACM",
+  "setting": "hard",
+  "seeds": [42, 43, 44, 45, 46],
+  "local_predictors": "fresh, frozen, within-suite",
+  "methods": [
+    "Project-and-Mean",
+    "Reliability-Selected Project-and-Mean",
+    "Useful-Only latent fusion oracle",
+    "Global Top-k",
+    "Full Mesh prediction consensus",
+    "TA-DVFG"
+  ],
+  "metrics": ["Test@BestVal", "Macro-F1", "paired_95pct_CI", "paired_t_test", "win_tie_loss"],
+  "hidden_export_equivalence_checks": 75,
+  "failed_variants_retained": ["gated", "concatenation"]
+}
+

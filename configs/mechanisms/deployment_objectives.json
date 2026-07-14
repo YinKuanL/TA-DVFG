@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "source": "experiments/experiment_plan.py::deployment_objective_jobs",
+  "objectives": [
+    {"name": "active"},
+    {"name": "local_mean"},
+    {"name": "joint", "lambda": 0.25},
+    {"name": "joint", "lambda": 0.5},
+    {"name": "joint", "lambda": 0.75}
+  ],
+  "metrics": ["active_readout_acc", "local_post_consensus_mean_acc"],
+  "communication": ["peer_to_peer_comm", "global_readout_comm", "control_plane_comm", "total_comm"]
+}
+

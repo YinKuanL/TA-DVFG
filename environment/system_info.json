@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "provenance": "copied from outputs/reproducibility/environment captured for commit febe05ea8079d3a4f70673dd62625480b79099f7",
+  "operating_system": {"caption": "Microsoft Windows 11 Home", "version": "10.0.22631", "build": 22631, "architecture": "64-bit"},
+  "cpu": {"name": "12th Gen Intel(R) Core(TM) i7-12700H", "physical_cores": 14, "logical_processors": 20},
+  "memory_gib": 31.64,
+  "gpu": {"name": "NVIDIA GeForce RTX 4060 Laptop GPU", "memory_mib": 8188, "driver": "560.76"},
+  "cuda_toolkit": "12.6 (V12.6.20)",
+  "python": "3.14.0",
+  "pytorch": "2.12.1+cpu",
+  "pytorch_cuda_available": false,
+  "experiment_device": "CPU"
+}
+
