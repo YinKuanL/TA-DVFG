@@ -12,20 +12,18 @@ required.
 ```bash
 python scripts/verify_supplement_coverage.py
 python scripts/verify_reported_values.py
-python experiments/final_analysis.py --results-root results --output-dir artifacts/regenerated/hgb
-python experiments/deployment_objective_analysis.py --input-root results/deployment_objective_runs --output-dir artifacts/regenerated/deployment
+python scripts/regenerate_artifacts.py
 python scripts/build_reproducibility_package.py
 ```
 
 Expected outputs:
 
-- `artifacts/regenerated/hgb/{tables,figures,statistics}/`
-- `artifacts/regenerated/deployment/`
-- `dist/aaai27_code_package/{MANIFEST.txt,SHA256SUMS.txt}`
-- `dist/aaai27_code_package/TA-DVFG_AAAI27_Code_Package.zip`
+- `artifacts/regenerated/{hgb,k_sensitivity,movielens,mechanisms}/`
+- `dist/aaai27_all_experiments_code/{MANIFEST.txt,SHA256SUMS.txt}`
+- `dist/aaai27_all_experiments_code/TA-DVFG_AAAI27_All_Experiments_Code.zip`
 
-The verification scripts compare paper text and existing raw/summary values; they
-do not rewrite any paper, CSV, JSON, cache, or protected figure.
+The verification scripts compare the bundled evidence with fixed reported-value
+checks. They do not rewrite any paper, raw CSV/JSON, cache, or protected figure.
 
 ## Level 2: lightweight deterministic validation
 
@@ -115,4 +113,3 @@ communication/parameter counts, train curves and failed diagnostic variants.
   identity; use replayed best-validation state.
 - Never overwrite `paper/source/` or historical raw/cached outputs during
   reproduction. Generate into `artifacts/` or a new output directory.
-

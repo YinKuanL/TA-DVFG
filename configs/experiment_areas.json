@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "purpose": "Reviewer-facing index of all main-paper and supplement experiment areas",
+  "shared": {
+    "seeds": [42, 43, 44, 45, 46],
+    "hgb_headline_config_dir": "configs/headline",
+    "hgb_defaults": "configs/hgb/defaults.json",
+    "movielens_defaults": "configs/movielens/defaults.json"
+  },
+  "areas": {
+    "hgb_cached_core": {"runner": "experiments/run_cached_core.py", "suite": "core"},
+    "comparison_and_subset_baselines": {"runner": "experiments/run_experiments.py", "suites": ["core", "central_baselines", "reviewer_safe_shuffled"]},
+    "deployment_objectives": {"runner": "experiments/deployment_objective_analysis.py", "config": "configs/mechanisms/deployment_objectives.json"},
+    "peer_exchange_subset_degree_and_provenance": {"runner_dir": "analysis", "evidence_dir": "artifacts/raw/mechanisms"},
+    "label_location": {"runner": "experiments/run_experiments.py", "suites": ["active_party_protocol", "strict_label_training"]},
+    "k_sensitivity": {"runner": "experiments/run_k_sensitivity.py", "config": "configs/robustness/k_sensitivity.json"},
+    "nested_weak_scaling": {"runner": "experiments/run_nested_weak_scaling.py", "config": "configs/robustness/nested_weak_scaling.json"},
+    "label_budget": {"runner": "experiments/run_experiments.py", "suite": "validation_label_budget"},
+    "topology_update_frequency": {"runner": "experiments/run_experiments.py", "suite": "topology_frequency"},
+    "party_scalability": {"runner": "experiments/run_experiments.py", "suite": "party_scalability"},
+    "minimum_link_m0": {"runner": "experiments/run_cached_minedges_sweep.py"},
+    "edge_budget_and_tau": {"runner": "experiments/run_experiments.py", "suite": "edge_budget"},
+    "latent_alignment": {"runner": "experiments/alignment_references.py", "config": "configs/alignment/acm_hard.json"},
+    "movielens": {"runner": "experiments/movielens/run_movielens_tadvfg.py", "config": "configs/movielens/defaults.json"},
+    "multimodal_and_modality_ablation": {"runner": "experiments/run_experiments.py", "suites": ["multimodal_core", "modality_ablation"], "status": "partial_missing_historical_engine"}
+  }
+}

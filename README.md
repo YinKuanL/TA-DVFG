@@ -1,7 +1,6 @@
 # TA-DVFG
 
-TA-DVFG (Topology-Aware Decentralized Vertical Federated Graph learning) learns
-a sparse party-to-party prediction topology and a topology-aware readout over
+TA-DVFG learns a sparse party-to-party prediction topology and a topology-aware readout over
 independently trained local predictors. The repository contains the HGB and
 MovieLens experiment implementations, cached-output analyses, mechanism audits,
 statistical reporting, and the canonical AAAI paper sources.
@@ -27,7 +26,7 @@ information, so the boundary is neither cryptographic nor differential-private.
 
 | Path | Contents |
 |---|---|
-| `main experiment/ta_dvfg_hgb_reliability.py` | Preserved HGB engine: parties, caches, consensus, topology, readouts, communication |
+| `core/ta_dvfg_hgb_reliability.py` (package) | Preserved HGB engine: parties, caches, consensus, topology, readouts, communication |
 | `models/` | MovieLens party predictor implementations |
 | `experiments/` | HGB, MovieLens, nested scaling, K sensitivity, alignment and analysis runners |
 | `analysis/` | Stable entry points for provenance and mechanism audits |
@@ -108,8 +107,8 @@ python scripts/build_reproducibility_package.py
 ```
 
 The build writes
-`dist/aaai27_code_package/TA-DVFG_AAAI27_Code_Package.zip` together with
-`MANIFEST.txt` and `SHA256SUMS.txt`. The builder excludes datasets, large caches,
+`dist/aaai27_all_experiments_code/TA-DVFG_AAAI27_All_Experiments_Code.zip`
+together with `MANIFEST.txt` and `SHA256SUMS.txt`. The builder excludes datasets, large caches,
 credentials, local paths, paper drafts, histories, logs and generated Python
 caches, then runs the supplement coverage audit against the staged package.
 
@@ -129,4 +128,3 @@ Citation metadata is provided in `CITATION.cff`. The manuscript is currently an
 anonymous submission. No repository license was present in the source history;
 users must treat the code as all-rights-reserved until the authors choose and add
 an explicit license.
-
