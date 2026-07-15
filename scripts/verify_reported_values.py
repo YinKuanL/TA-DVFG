@@ -6,6 +6,7 @@ import argparse
 import csv
 import math
 import re
+import statistics
 from pathlib import Path
 
 
@@ -136,6 +137,158 @@ def verify_communication(root: Path, audit: Audit) -> None:
     audit.check("ACM Main TA-DVFG total", float(row["total_comm_mean"]), 152460.0, 0.01)
 
 
+def group_mean(data: list[dict[str, str]], **filters: object) -> float:
+    selected = [
+        float(row["test_at_best_val"])
+        for row in data
+        if all(str(row.get(key)) == str(value) for key, value in filters.items())
+    ]
+    if not selected:
+        raise ValueError(f"no rows for filters: {filters}")
+    return statistics.mean(selected)
+
+
+def verify_nested_weak_scaling(root: Path, audit: Audit) -> None:
+    raw = rows(root / "artifacts/raw/nested_weak_scaling/raw_weak_scaling.csv")
+    summary = rows(root / "artifacts/summaries/nested_weak_scaling/weak_scaling_summary.csv")
+    required_methods = {
+        "adaptive_graph_val",
+        "full_mesh",
+        "adaptive_pair",
+        "adaptive_complementarity",
+    }
+    expected_seeds = {"42", "43", "44", "45", "46"}
+    for dataset in ("ACM", "DBLP"):
+        for weak_count in (0, 2, 5, 10, 15):
+            for method in sorted(required_methods):
+                seeds = {
+                    row["seed"] for row in raw
+                    if row["dataset"] == dataset
+                    and int(row["weak_count"]) == weak_count
+                    and row["method"] == method
+                }
+                if seeds == expected_seeds:
+                    audit.passed += 1
+                    print(f"[PASS] nested coverage {dataset} weak={weak_count} {method}: seeds 42--46")
+                else:
+                    audit.failed.append(
+                        f"nested coverage {dataset} weak={weak_count} {method}: {sorted(seeds)}"
+                    )
+
+    summary_by = {
+        (row["dataset"], int(row["weak_count"]), row["method"]): row
+        for row in summary
+    }
+    for dataset, expected_gap in (("ACM", 12.59), ("DBLP", 5.16)):
+        tadvfg = group_mean(raw, dataset=dataset, weak_count=15, method="adaptive_graph_val")
+        full_mesh = group_mean(raw, dataset=dataset, weak_count=15, method="full_mesh")
+        audit.check(f"nested {dataset} final gap points", 100 * (tadvfg - full_mesh), expected_gap, 0.005)
+        audit.check(
+            f"nested {dataset} TA-DVFG summary aggregation",
+            float(summary_by[(dataset, 15, "adaptive_graph_val")]["test_at_best_val_mean"]),
+            tadvfg,
+            1e-12,
+        )
+        audit.check(
+            f"nested {dataset} TA-DVFG links",
+            float(summary_by[(dataset, 15, "adaptive_graph_val")]["selected_links_mean"]),
+            5.0,
+            0.25,
+        )
+        audit.check(
+            f"nested {dataset} Full Mesh links at 18 parties",
+            float(summary_by[(dataset, 15, "full_mesh")]["selected_links_mean"]),
+            153.0,
+            1e-12,
+        )
+
+
+def verify_alignment_acm_hard(root: Path, audit: Audit) -> None:
+    raw_root = root / "artifacts/raw/alignment_acm_hard"
+    summary_root = root / "artifacts/summaries/alignment_acm_hard"
+    per_seed = rows(raw_root / "alignment_acmhard5_per_seed.csv")
+    summary = rows(summary_root / "alignment_acmhard5_summary.csv")
+    stats_rows = rows(summary_root / "alignment_acmhard5_stats.csv")
+    hidden = rows(raw_root / "hidden_export_equivalence.csv")
+    communication = rows(summary_root / "alignment_acmhard5_communication.csv")
+
+    required_methods = {
+        "Best Single",
+        "Global Top-k Reliability",
+        "Full Mesh prediction consensus",
+        "TA-DVFG",
+        "Project-and-Mean",
+        "Reliability-Selected Project-and-Mean",
+        "Useful-Only best latent fusion",
+    }
+    expected_seeds = {"42", "43", "44", "45", "46"}
+    for method in sorted(required_methods):
+        seeds = {row["seed"] for row in per_seed if row["method"] == method}
+        if seeds == expected_seeds:
+            audit.passed += 1
+            print(f"[PASS] ACM Hard alignment {method}: seeds 42--46")
+        else:
+            audit.failed.append(f"ACM Hard alignment {method}: seeds {sorted(seeds)}")
+
+    by_method = {row["method"]: row for row in summary}
+    audit.check("alignment TA-DVFG mean percent", 100 * float(by_method["TA-DVFG"]["test_at_best_val_mean"]), 85.60, 0.005)
+    audit.check("alignment TA-DVFG SD percent", 100 * float(by_method["TA-DVFG"]["test_at_best_val_std"]), 1.16, 0.005)
+    audit.check(
+        "alignment Reliability-Selected P&M mean percent",
+        100 * float(by_method["Reliability-Selected Project-and-Mean"]["test_at_best_val_mean"]),
+        77.10,
+        0.005,
+    )
+    audit.check(
+        "alignment Reliability-Selected P&M SD percent",
+        100 * float(by_method["Reliability-Selected Project-and-Mean"]["test_at_best_val_std"]),
+        0.93,
+        0.005,
+    )
+    audit.check(
+        "alignment Useful-Only oracle mean percent",
+        100 * float(by_method["Useful-Only best latent fusion"]["test_at_best_val_mean"]),
+        88.93,
+        0.005,
+    )
+    audit.check(
+        "alignment Useful-Only oracle SD percent",
+        100 * float(by_method["Useful-Only best latent fusion"]["test_at_best_val_std"]),
+        0.94,
+        0.005,
+    )
+
+    rel_stats = next(row for row in stats_rows if row["method"] == "Reliability-Selected Project-and-Mean")
+    audit.check("alignment TA-DVFG minus Reliability-Selected P&M points", -100 * float(rel_stats["paired_mean_delta_vs_tadvfg"]), 8.50, 0.005)
+    audit.check("alignment paired CI low points", -100 * float(rel_stats["ci95_high"]), 6.54, 0.005)
+    audit.check("alignment paired CI high points", -100 * float(rel_stats["ci95_low"]), 10.47, 0.005)
+    audit.check("alignment paired t p", float(rel_stats["paired_ttest_p"]), 2.76e-4, 5e-7)
+    audit.check("alignment TA-DVFG wins", float(rel_stats["losses_vs_tadvfg"]), 5.0, 0.0)
+    audit.check("alignment TA-DVFG ties", float(rel_stats["ties_vs_tadvfg"]), 0.0, 0.0)
+    audit.check("alignment TA-DVFG losses", float(rel_stats["wins_vs_tadvfg"]), 0.0, 0.0)
+
+    audit.check("hidden-export check count", float(len(hidden)), 75.0, 0.0)
+    audit.check("hidden-export passing count", float(sum(row["status"] == "PASS" for row in hidden)), 75.0, 0.0)
+    audit.check(
+        "hidden-export maximum difference",
+        max(
+            float(row[column])
+            for row in hidden
+            for column in ("max_logit_diff", "max_probability_diff", "val_metric_diff", "test_metric_diff")
+        ),
+        0.0,
+        0.0,
+    )
+    communication_methods = {row["method"] for row in communication}
+    if required_methods <= communication_methods:
+        audit.passed += 1
+        print("[PASS] alignment communication/parameter rows cover all requested methods")
+    else:
+        audit.failed.append(
+            "alignment communication rows missing: " + ", ".join(sorted(required_methods - communication_methods))
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
@@ -148,6 +301,12 @@ def main() -> int:
         verify_movielens(root, audit)
         verify_mechanism(root, audit)
         verify_communication(root, audit)
+        closure_root = root / "artifacts" / "raw" / "nested_weak_scaling"
+        if closure_root.is_dir():
+            verify_nested_weak_scaling(root, audit)
+            verify_alignment_acm_hard(root, audit)
+        elif (root / "artifacts" / "raw" / "hgb").is_dir():
+            raise FileNotFoundError("package closure evidence is missing")
         main_text = (root / "paper/source/main.tex").read_text(encoding="utf-8", errors="replace") if (root / "paper/source/main.tex").is_file() else ""
         supplement = (root / "paper/source/supplementary.tex").read_text(encoding="utf-8", errors="replace") if (root / "paper/source/supplementary.tex").is_file() else ""
         if main_text:
@@ -170,4 +329,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

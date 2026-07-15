@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import importlib.util
 import json
@@ -113,6 +114,173 @@ def make_package_local(stage: Path) -> None:
             rewritten = rewritten.replace(old, new)
         if rewritten != original:
             path.write_text(rewritten, encoding="utf-8", newline="")
+
+
+def remove_unreported_multimodal_material(stage: Path) -> None:
+    """Remove plans/evidence absent from the current paper and supplement."""
+    plan_path = stage / "experiments" / "experiment_plan.py"
+    plan = plan_path.read_text(encoding="utf-8")
+    plan = re.sub(
+        r"\n\ndef multimodal_core_jobs\(\).*?(?=\n\ndef central_baseline_jobs)",
+        "\n",
+        plan,
+        flags=re.DOTALL,
+    )
+    plan = plan.replace('    "multimodal_core",\n', "")
+    plan = plan.replace('    "modality_ablation",\n', "")
+    plan = plan.replace('    "multimodal_core": multimodal_core_jobs,\n', "")
+    plan = plan.replace('    "modality_ablation": modality_ablation_jobs,\n', "")
+    plan_path.write_text(plan, encoding="utf-8", newline="")
+
+    runner_path = stage / "experiments" / "run_experiments.py"
+    runner = runner_path.read_text(encoding="utf-8")
+    runner = re.sub(r'^\s*"multimodal":.*\n', "", runner, flags=re.MULTILINE)
+    runner_path.write_text(runner, encoding="utf-8", newline="")
+
+    tests_path = stage / "tests" / "test_experiment_plan.py"
+    tests = tests_path.read_text(encoding="utf-8")
+    tests = tests.replace("self.assertEqual(187, len(jobs))", "self.assertEqual(169, len(jobs))")
+    tests = re.sub(
+        r"\n    def test_modality_ablation_contains_single_and_mixed_views.*?(?=\n    def test_reviewer_safe_output_names)",
+        "\n",
+        tests,
+        flags=re.DOTALL,
+    )
+    tests = re.sub(
+        r"\n    def test_multimodal_jobs_use_prediction_cache.*?(?=\n    def test_standard_ablations_share_cached_core_predictions)",
+        "\n",
+        tests,
+        flags=re.DOTALL,
+    )
+    tests_path.write_text(tests, encoding="utf-8", newline="")
+
+    local_test = stage / "tests" / "smoke" / "test_package_local_paths.py"
+    text = local_test.read_text(encoding="utf-8")
+    text = re.sub(r'^\s*old_multimodal_layout = .*\n', "", text, flags=re.MULTILINE)
+    text = re.sub(r'^\s*assert old_multimodal_layout not in text, path\n', "", text, flags=re.MULTILINE)
+    local_test.write_text(text, encoding="utf-8", newline="")
+
+    ablation_path = stage / "experiments" / "make_ablation_plots.py"
+    ablation = ablation_path.read_text(encoding="utf-8")
+    ablation = re.sub(
+        r"\n\ndef plot_modality\(.*?(?=\n\ndef plot_consensus)",
+        "\n",
+        ablation,
+        flags=re.DOTALL,
+    )
+    ablation = ablation.replace(
+        "(plot_edge_budget, plot_noise_ratio, plot_modality, plot_consensus, plot_readout)",
+        "(plot_edge_budget, plot_noise_ratio, plot_consensus, plot_readout)",
+    )
+    ablation_path.write_text(ablation, encoding="utf-8", newline="")
+
+    final_path = stage / "experiments" / "final_analysis.py"
+    final = final_path.read_text(encoding="utf-8")
+    final = final.replace('        "multimodal_core",\n', "")
+    final = final.replace('        "modality_ablation",\n', "")
+    final = final.replace('        "multimodal_core": 6,\n', "")
+    final = final.replace('        "modality_ablation": 12,\n', "")
+    final = re.sub(
+        r'\n        \{\n            "suite": "multimodal_core / modality_ablation",.*?\n        \},',
+        "",
+        final,
+        flags=re.DOTALL,
+    )
+    final = re.sub(
+        r"\n\ndef plot_modality\(.*?(?=\n\ndef plot_active_party_protocol)",
+        "\n",
+        final,
+        flags=re.DOTALL,
+    )
+    final = re.sub(
+        r"\n    multimodal = raw\[.*?(?=\n    central = raw\[)",
+        "\n",
+        final,
+        flags=re.DOTALL,
+    )
+    final = final.replace(
+        "[readout_stats, evaluator_stats, modality_stats]",
+        "[readout_stats, evaluator_stats]",
+    )
+    final = re.sub(r'^\s*save_table\(multimodal_stats,.*\n', "", final, flags=re.MULTILINE)
+    final = re.sub(r'^\s*plot_modality\(.*\n', "", final, flags=re.MULTILINE)
+    final = re.sub(r'^\s*plot_multimodal_comparison\(.*\n', "", final, flags=re.MULTILINE)
+    final = final.replace("    modality_summary: pd.DataFrame,\n", "")
+    final = re.sub(
+        r"\n    modality_best = \(.*?\n    \)\n",
+        "\n",
+        final,
+        flags=re.DOTALL,
+    )
+    final = re.sub(
+        r"\n    for _, row in modality_best\.iterrows\(\):.*?(?=\n    if not noise_summary\.empty:)",
+        "\n",
+        final,
+        flags=re.DOTALL,
+    )
+    final = final.replace("        modality_summary,\n", "")
+    final = final.replace(
+        '        "- Cached core, topology objective, edge budget, consensus, min-edges, active-party protocol, and multimodal experiments use "\n'
+        '        "seed-shuffled useful/noisy party positions.",\n',
+        '        "- Cached core, topology objective, edge budget, consensus, min-edges, and active-party protocol use "\n'
+        '        "seed-shuffled useful/noisy party positions.",\n',
+    )
+    final = final.replace(
+        '        "- The multimodal experiment is a simulated local modality construction, not a real image/text/audio benchmark.",\n',
+        "",
+    )
+    final = final.replace(
+        '        "protocol sensitivity, multimodal and centralized references.",\n',
+        '        "protocol sensitivity and centralized references.",\n',
+    )
+    final_path.write_text(final, encoding="utf-8", newline="")
+
+    seed_path = stage / "artifacts" / "raw" / "hgb" / "seed_results.csv"
+    with seed_path.open(newline="", encoding="utf-8-sig") as handle:
+        reader = csv.DictReader(handle)
+        fieldnames = reader.fieldnames
+        rows = [
+            row for row in reader
+            if row.get("suite") not in {"multimodal_core", "modality_ablation"}
+        ]
+    if not fieldnames:
+        raise ValueError("HGB compact evidence has no header")
+    with seed_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    for relative in (
+        "artifacts/summaries/hgb/tables/paper_multimodal_core.csv",
+        "artifacts/summaries/hgb/tables/paper_modality_ablation.csv",
+        "artifacts/summaries/hgb/statistics/multimodal_paired_significance.csv",
+    ):
+        path = stage / relative
+        if path.exists():
+            path.unlink()
+
+    for relative in (
+        "artifacts/summaries/hgb/tables/experiment_completeness.csv",
+        "artifacts/summaries/hgb/tables/protocol_audit.csv",
+    ):
+        path = stage / relative
+        with path.open(newline="", encoding="utf-8-sig") as handle:
+            reader = csv.DictReader(handle)
+            fields = reader.fieldnames
+            clean_rows = [
+                row for row in reader
+                if not any(
+                    token in str(value).lower()
+                    for value in row.values()
+                    for token in ("multimodal", "modality_ablation")
+                )
+            ]
+        if not fields:
+            raise ValueError(f"summary evidence has no header: {relative}")
+        with path.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(clean_rows)
 
 
 def write_integrity_files(stage: Path, distribution: Path) -> None:
@@ -264,6 +432,50 @@ def build(root: Path, distribution: Path) -> tuple[Path, Path]:
         "analysis/mechanisms/_historical/task3_4_runner.py",
     )
 
+    for source, destination in {
+        "results/nested_weak_scaling/raw_weak_scaling.csv": "artifacts/raw/nested_weak_scaling/raw_weak_scaling.csv",
+        "results/nested_weak_scaling/manifest.json": "artifacts/raw/nested_weak_scaling/manifest.json",
+        "results/nested_weak_scaling/weak_scaling_summary.csv": "artifacts/summaries/nested_weak_scaling/weak_scaling_summary.csv",
+        "results/nested_weak_scaling/weak_scaling_paired_deltas.csv": "artifacts/summaries/nested_weak_scaling/weak_scaling_paired_deltas.csv",
+    }.items():
+        copy_git_blob(root, stage, source, destination)
+
+    alignment_raw = (
+        "alignment_acmhard5_per_seed.csv",
+        "alignment_acmhard5_selected_parties.csv",
+        "alignment_acmhard5_gate_diagnostics.csv",
+        "alignment_reference_per_seed.csv",
+        "alignment_reference_selection_grid.csv",
+        "hidden_export_equivalence.csv",
+        "cache_comparability_audit.csv",
+        "gate_diagnostics.csv",
+        "hidden_scale_audit.csv",
+        "alignment_reference_metadata.json",
+    )
+    alignment_summaries = (
+        "alignment_acmhard5_summary.csv",
+        "alignment_acmhard5_stats.csv",
+        "alignment_acmhard5_communication.csv",
+        "alignment_acmhard5_capabilities.csv",
+        "alignment_reference_summary.csv",
+        "alignment_reference_stats.csv",
+        "alignment_reference_communication.csv",
+    )
+    for name in alignment_raw:
+        copy_git_blob(
+            root,
+            stage,
+            f"outputs/alignment_references_acmhard5/{name}",
+            f"artifacts/raw/alignment_acm_hard/{name}",
+        )
+    for name in alignment_summaries:
+        copy_git_blob(
+            root,
+            stage,
+            f"outputs/alignment_references_acmhard5/{name}",
+            f"artifacts/summaries/alignment_acm_hard/{name}",
+        )
+
     write_headline_configs(root, stage)
 
     copy_file(root, stage, "results/final_analysis/data/all_raw_compact.csv", "artifacts/raw/hgb/seed_results.csv")
@@ -280,25 +492,11 @@ def build(root: Path, distribution: Path) -> tuple[Path, Path]:
         copy_glob(root, stage, f"outputs/round2_closure/{task}", "*.csv", "artifacts/raw/mechanisms")
         copy_glob(root, stage, f"outputs/round2_closure/{task}", "*.md", "artifacts/summaries/mechanisms")
 
-    for name in (
-        "alignment_reference_communication.csv",
-        "alignment_reference_metadata.json",
-        "alignment_reference_per_seed.csv",
-        "alignment_reference_selection_grid.csv",
-        "alignment_reference_stats.csv",
-        "alignment_reference_summary.csv",
-        "cache_comparability_audit.csv",
-        "gate_diagnostics.csv",
-        "hidden_export_equivalence.csv",
-        "hidden_scale_audit.csv",
-    ):
-        copy_file(root, stage, f"outputs/alignment_references/{name}", f"artifacts/raw/alignment/{name}")
-    copy_glob(root, stage, "outputs/alignment_references_dblphard5", "*.csv", "artifacts/raw/alignment/dblp_hard")
-
     copy_file(root, stage, "metadata/k_sensitivity_raw.csv", "artifacts/raw/k_sensitivity/k_sensitivity_raw.csv")
     copy_file(root, stage, "metadata/k_sensitivity_summary.csv", "artifacts/summaries/k_sensitivity/k_sensitivity_summary.csv")
 
     make_package_local(stage)
+    remove_unreported_multimodal_material(stage)
     sanitize_local_metadata(stage, root)
     write_integrity_files(stage, distribution)
     subprocess.run([sys.executable, str(stage / "scripts" / "verify_package.py"), "--root", str(stage)], check=True)

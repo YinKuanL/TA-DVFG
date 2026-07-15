@@ -13,12 +13,11 @@ required.
 python scripts/verify_supplement_coverage.py
 python scripts/verify_reported_values.py
 python scripts/regenerate_artifacts.py
-python scripts/build_reproducibility_package.py
 ```
 
 Expected outputs:
 
-- `artifacts/regenerated/{hgb,k_sensitivity,movielens,mechanisms}/`
+- `artifacts/regenerated/{hgb,k_sensitivity,movielens,mechanisms,nested_weak_scaling,alignment_acm_hard}/`
 - `dist/aaai27_all_experiments_code/{MANIFEST.txt,SHA256SUMS.txt}`
 - `dist/aaai27_all_experiments_code/TA-DVFG_AAAI27_All_Experiments_Code.zip`
 
@@ -28,22 +27,24 @@ checks. They do not rewrite any paper, raw CSV/JSON, cache, or protected figure.
 ## Level 2: lightweight deterministic validation
 
 Purpose: validate algorithm invariants, synthetic MovieLens leakage boundaries,
-cached-output analysis, and topology provenance replay.
+bundled seed evidence, and package integrity without replay caches.
 
 ```bash
 python -m pytest tests/unit tests/smoke -q
 python -m pytest tests/test_experiment_plan.py tests/test_reviewer_defense.py -q
-python -m compileall "main experiment" experiments models analysis scripts tests
-python analysis/provenance/run_testatbestval_replay.py
-python analysis/provenance/run_topology_provenance.py
-python analysis/mechanisms/run_peer_exchange_audit.py
+python -m compileall .
+python scripts/verify_reported_values.py
+python scripts/verify_package.py
 ```
 
-The provenance/mechanism commands require the ignored paper-evaluation replay
-bundles and historical implementations in the research workspace, or their
-package-local `_historical/` copies. They reuse cached predictions; they do not
-train local models. On the reported CPU machine the unit/smoke suite should take
-seconds, and cached provenance replay may take minutes depending on bundle I/O.
+The package includes historical provenance/mechanism implementations for code
+inspection, plus their compact seed-level and statistical outputs. The commands
+`analysis/provenance/run_testatbestval_replay.py`,
+`analysis/provenance/run_topology_provenance.py`, and
+`analysis/mechanisms/run_peer_exchange_audit.py` are **non-runnable
+derived-evidence analyses in the clean ZIP** because their large NPZ replay
+bundles are intentionally excluded. They must not be presented as Level-2
+clean-ZIP commands.
 
 ## Level 3: full experiments (documented only)
 

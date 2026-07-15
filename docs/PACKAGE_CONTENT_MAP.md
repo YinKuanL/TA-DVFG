@@ -23,7 +23,7 @@ summary evidence is read-only input to the regeneration workflow.
 | Claim family | Entry points | Explicit configuration |
 |---|---|---|
 | HGB core, topology, communication, readout | `core/ta_dvfg_hgb_reliability.py`, `experiments/run_cached_core.py`, `experiments/experiment_plan.py` | `configs/hgb/defaults.json`, `configs/headline/*/metrics_config.json` |
-| Modality, label budget/location, party count, topology frequency and controls | `experiments/experiment_plan.py`, `experiments/run_cached_ablations.py`, `experiments/run_experiments.py` | `configs/hgb/defaults.json`, `configs/robustness/control_sensitivity.json` |
+| Label budget/location, party count, topology frequency and controls | `experiments/experiment_plan.py`, `experiments/run_cached_ablations.py`, `experiments/run_experiments.py` | `configs/hgb/defaults.json`, `configs/robustness/control_sensitivity.json` |
 | K sensitivity | `experiments/run_k_sensitivity.py` | `configs/robustness/k_sensitivity.json` |
 | Nested weak-party scaling | `experiments/run_nested_weak_scaling.py` | `configs/robustness/nested_weak_scaling.json` |
 | MovieLens | `experiments/movielens/run_movielens_tadvfg.py`, aggregation and plotting scripts in the same directory | `configs/movielens/defaults.json` |
@@ -44,14 +44,14 @@ the package-local `core/` engine and bundled headline configurations.
 | HGB headline accuracy/communication | `artifacts/raw/hgb/paper_main_accuracy.csv`, `paper_communication_efficiency.csv` | matching files in `artifacts/summaries/hgb/tables/` | Complete for fixed-value verification |
 | K sensitivity | `artifacts/raw/k_sensitivity/k_sensitivity_raw.csv` and `metadata/k_sensitivity_raw.csv` | `artifacts/summaries/k_sensitivity/` and `metadata/k_sensitivity_summary.csv` | Complete |
 | MovieLens | `artifacts/raw/movielens/*per_seed.csv` and topology JSON | bundled summary CSVs | Complete for five-party and fifteen-party reported checks |
-| Same-state and provenance mechanisms | `artifacts/raw/mechanisms/task*_per_seed.csv` plus audits | `artifacts/summaries/mechanisms/` | Complete for bundled statistical/value checks; replay bundles excluded |
-| Alignment references | `artifacts/raw/alignment/` | bundled summary/statistics CSVs | Partial: the available ACM CSV contains one seed; DBLP hard five-seed evidence is included as supporting material |
-| Nested weak-party scaling | none | none | Missing: runner and config are included, but no small raw/summary output was available for packaging |
-| Multimodal HGB and modality ablation | compact seed evidence in `artifacts/raw/hgb/seed_results.csv` | bundled HGB tables | Partial: the experiment plan and results are included, but the separately referenced historical multimodal engine is absent from the repository |
+| Same-state and provenance mechanisms | `artifacts/raw/mechanisms/task*_per_seed.csv` plus audits | `artifacts/summaries/mechanisms/` | Complete derived evidence; generator code is included, but replay commands are non-runnable because large bundles are excluded |
+| ACM Hard alignment references | `artifacts/raw/alignment_acm_hard/` | `artifacts/summaries/alignment_acm_hard/` | Complete: seeds 42--46, all requested methods/statistics, communication/parameters, and 75 hidden-export checks |
+| Nested weak-party scaling | `artifacts/raw/nested_weak_scaling/` | `artifacts/summaries/nested_weak_scaling/` | Complete: ACM/DBLP, weak counts 0/2/5/10/15, seeds 42--46, and all reported comparison methods |
 | Subset and degree audits | `artifacts/raw/mechanisms/task3_*` and `task4_*` | bundled reports/statistics | Complete code/evidence: the exact historical combined generator is package-local; large replay bundles are excluded |
 
-The partial and missing rows are intentionally not reconstructed from manuscript
-text. No reported values are synthesized, altered, or rounded by the builder.
+The recovered alignment and nested-scaling files come unchanged from reachable
+repository history; the builder only redacts workstation path fields. No
+reported numerical values are synthesized, altered, or rounded by the builder.
 
 ## Exclusions
 

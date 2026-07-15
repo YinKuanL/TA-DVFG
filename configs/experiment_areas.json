@@ -20,8 +20,7 @@
     "party_scalability": {"runner": "experiments/run_experiments.py", "suite": "party_scalability"},
     "minimum_link_m0": {"runner": "experiments/run_cached_minedges_sweep.py"},
     "edge_budget_and_tau": {"runner": "experiments/run_experiments.py", "suite": "edge_budget"},
-    "latent_alignment": {"runner": "experiments/alignment_references.py", "config": "configs/alignment/acm_hard.json"},
-    "movielens": {"runner": "experiments/movielens/run_movielens_tadvfg.py", "config": "configs/movielens/defaults.json"},
-    "multimodal_and_modality_ablation": {"runner": "experiments/run_experiments.py", "suites": ["multimodal_core", "modality_ablation"], "status": "partial_missing_historical_engine"}
+    "latent_alignment": {"runner": "experiments/alignment_references.py", "config": "configs/alignment/acm_hard.json", "evidence": "artifacts/raw/alignment_acm_hard"},
+    "movielens": {"runner": "experiments/movielens/run_movielens_tadvfg.py", "config": "configs/movielens/defaults.json"}
   }
 }

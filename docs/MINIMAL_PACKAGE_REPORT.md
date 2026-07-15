@@ -6,8 +6,8 @@ Date: 2026-07-15
 
 - Code folder: `C:\Users\Yin Kuan\OneDrive\桌面\Durham_CS\Research\TA-DVFG\dist\aaai27_all_experiments_code\TA-DVFG`
 - ZIP: `C:\Users\Yin Kuan\OneDrive\桌面\Durham_CS\Research\TA-DVFG\dist\aaai27_all_experiments_code\TA-DVFG_AAAI27_All_Experiments_Code.zip`
-- ZIP SHA-256: `e918e885545846ebad02625fe38d54ea5ce6f928c0522d0285f4b98c1d990b51`
-- Manifested payload files: 173
+- ZIP SHA-256: `851c32f75118d59445507b9da2e668fd32e4ec45427de48b26af797b37b0b99b`
+- Manifested payload files: 164
 
 The package was built as one reviewer-facing folder. Experiment paths in the
 copied code resolve to that folder's `core/`, `configs/`, `artifacts/`, and local
@@ -26,37 +26,43 @@ metadata.
   recovered exact historical combined generator.
 - Active-party evaluator/identity and strict label-location protocols.
 - Multi-hop K sensitivity.
-- Nested weak-party scaling runner and audited configuration.
+- Nested weak-party scaling runner, audited configuration, and complete
+  ACM/DBLP seed evidence for weak counts 0/2/5/10/15.
 - Validation-label budget and topology-update frequency.
 - Party-count scalability.
 - Minimum-link `m=0`, edge-budget, and gain-threshold sweeps.
 - Consensus/readout, topology-objective, noise, and protocol controls.
 - MovieLens five-party and fifteen-party Main/Hard experiments, models,
   aggregation, and plotting.
-- Latent-alignment reference models, runner, audit evidence, and figure script.
+- ACM Hard latent-alignment reference models, runner, five-seed evidence,
+  paired statistics, communication/parameter counts, and 75 hidden-export checks.
 - Communication accounting, statistics, provenance, and table/figure
   regeneration.
-- Multimodal/modality-ablation experiment plans and compact seed-level results.
-
 ## Missing or partial areas
 
-- **Multimodal HGB source code (partial):** `experiment_plan.py` references a
-  separate historical multimodal engine, but that file is absent from every
-  available local and remote branch history checked. The two multimodal suites
-  therefore retain plans/configuration and bundled seed evidence but cannot be
-  rerun from this package. No substitute implementation was invented.
-- **Nested weak-party evidence (partial):** the full runner/configuration is
-  included, but no small raw/summary CSV was available. The excluded ten
-  prediction caches would be needed for the cached replay.
-- **ACM alignment evidence (partial):** the available ACM CSV has one seed,
-  although the five-seed runner/configuration is included. Available five-seed
-  DBLP supporting evidence is bundled separately.
 - **Mechanism replay inputs (partial rerun):** all available generators and
   seed-level/statistical outputs are included; large NPZ replay bundles are
-  excluded by the issue constraints.
+  excluded by the issue constraints. These commands are explicitly marked as
+  non-runnable derived-evidence analyses, not clean-ZIP Level-2 commands.
 - Public HGB and MovieLens datasets are intentionally excluded. Full fresh
   reruns require the user to obtain them separately and place them at the
   documented package-local paths.
+
+Multimodal plans, evidence, table inputs, and reviewer-facing references were
+removed because the current main paper and supplement do not reference them.
+
+## Artifact-closure provenance
+
+The complete closure files were recovered unchanged from reachable commit
+`5cc081568eea994f2de3f5d4bd422b328587178f`:
+
+- `results/nested_weak_scaling/{raw_weak_scaling.csv,weak_scaling_summary.csv,weak_scaling_paired_deltas.csv,manifest.json}`
+- `outputs/alignment_references_acmhard5/` seed, summary, statistics,
+  communication, capability, selection, diagnostic, metadata, and
+  hidden-export CSV/JSON files.
+
+Only workstation path fields are redacted in the package copy. Numerical fields
+are byte-for-byte values from the recovered evidence.
 
 ## Clean-ZIP validation
 
@@ -66,14 +72,15 @@ experiment.
 | Check | Result |
 |---|---|
 | `python -m compileall -q .` | PASS |
-| `python -m pytest tests -q` | PASS: 47 passed, 0 failed, 1 PyTorch warning |
-| `python scripts/verify_reported_values.py` | PASS: 71 passed, 0 failed |
-| `python scripts/verify_package.py` | PASS: 2 groups, 0 failed; 173 payload files |
-| `python scripts/regenerate_artifacts.py` | PASS: 13 files regenerated from bundled evidence |
-| Available non-multimodal suite expansion | PASS: 169 jobs across 21 suites |
-| Runner `--help` import checks | PASS: 8 passed, 0 failed |
+| `python -m pytest tests/unit tests/smoke -q` | PASS: 16 passed, 0 failed |
+| `python scripts/verify_reported_values.py` | PASS: 143 passed, 0 failed |
+| `python scripts/verify_package.py` | PASS: 2 groups, 0 failed; 164 payload files |
+| Additional plan/defense tests | PASS: 28 passed, 0 failed, 1 PyTorch warning |
+| `python scripts/regenerate_artifacts.py` | PASS: 18 files regenerated from bundled evidence |
 
-The reported-value verifier performs 71 checks in the anonymous package; four
+The 143 anonymous-package checks include complete nested-scaling seed coverage,
+the 12.59/5.16-point final gaps, TA-DVFG/Full-Mesh link counts, all requested ACM
+alignment means/statistics, and 75/75 hidden-export equivalence checks. Four
 additional manuscript-text presence checks are intentionally skipped because
 paper sources are excluded.
 

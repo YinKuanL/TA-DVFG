@@ -54,6 +54,16 @@ REQUIRED = {
     "artifacts/raw/movielens/movielens_15party_summary.csv",
     "artifacts/raw/mechanisms/task2_per_seed.csv",
     "artifacts/raw/mechanisms/task2_paired_statistics.csv",
+    "artifacts/raw/nested_weak_scaling/raw_weak_scaling.csv",
+    "artifacts/raw/nested_weak_scaling/manifest.json",
+    "artifacts/summaries/nested_weak_scaling/weak_scaling_summary.csv",
+    "artifacts/summaries/nested_weak_scaling/weak_scaling_paired_deltas.csv",
+    "artifacts/raw/alignment_acm_hard/alignment_acmhard5_per_seed.csv",
+    "artifacts/raw/alignment_acm_hard/hidden_export_equivalence.csv",
+    "artifacts/summaries/alignment_acm_hard/alignment_acmhard5_summary.csv",
+    "artifacts/summaries/alignment_acm_hard/alignment_acmhard5_stats.csv",
+    "artifacts/summaries/alignment_acm_hard/alignment_acmhard5_communication.csv",
+    "artifacts/summaries/alignment_acm_hard/alignment_acmhard5_capabilities.csv",
     "metadata/k_sensitivity_raw.csv",
     "metadata/k_sensitivity_summary.csv",
     "tests/unit/test_method_invariants.py",
@@ -144,6 +154,27 @@ def main() -> int:
     extras = sorted(path for path in actual - listed if not allowed_unmanifested(path))
     if extras:
         failures.append("unmanifested files: " + ", ".join(extras))
+
+    forbidden_experiment_paths = sorted(
+        relative for relative in manifest
+        if "multimodal" in relative.lower() or "modality_ablation" in relative.lower()
+    )
+    if forbidden_experiment_paths:
+        failures.append(
+            "unreported multimodal paths packaged: " + ", ".join(forbidden_experiment_paths)
+        )
+    multimodal_tokens = re.compile(r"multimodal_core|modality_ablation|ta_dvfg_hgb_multimodal")
+    for relative in (
+        "README.md",
+        "REPRODUCE.md",
+        "configs/experiment_areas.json",
+        "docs/PACKAGE_CONTENT_MAP.md",
+        "experiments/experiment_plan.py",
+        "experiments/run_experiments.py",
+    ):
+        path = root / relative
+        if path.is_file() and multimodal_tokens.search(path.read_text(encoding="utf-8", errors="replace")):
+            failures.append(f"unreported multimodal reference found in {relative}")
 
     identity_patterns = {
         "Windows user path": re.compile(r"(?i)(?:[a-z]:[\\/]+users[\\/]|onedrive[\\/])"),

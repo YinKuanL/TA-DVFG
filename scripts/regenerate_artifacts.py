@@ -83,6 +83,23 @@ def regenerate_mechanisms(root: Path, output: Path) -> None:
         writer.writerows(rows)
 
 
+def regenerate_closure_tables(root: Path, output: Path) -> None:
+    copies = {
+        "artifacts/summaries/nested_weak_scaling/weak_scaling_summary.csv":
+            "nested_weak_scaling/weak_scaling_summary.csv",
+        "artifacts/summaries/nested_weak_scaling/weak_scaling_paired_deltas.csv":
+            "nested_weak_scaling/weak_scaling_paired_deltas.csv",
+        "artifacts/summaries/alignment_acm_hard/alignment_acmhard5_summary.csv":
+            "alignment_acm_hard/alignment_acmhard5_summary.csv",
+        "artifacts/summaries/alignment_acm_hard/alignment_acmhard5_stats.csv":
+            "alignment_acm_hard/alignment_acmhard5_stats.csv",
+        "artifacts/summaries/alignment_acm_hard/alignment_acmhard5_communication.csv":
+            "alignment_acm_hard/alignment_acmhard5_communication.csv",
+    }
+    for source, destination in copies.items():
+        copy_csv(root / source, output / destination)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
@@ -96,6 +113,7 @@ def main() -> int:
     regenerate_k(root, output)
     regenerate_movielens(root, output)
     regenerate_mechanisms(root, output)
+    regenerate_closure_tables(root, output)
     print(f"Regenerated reviewer artifacts in {output}")
     return 0
 
