@@ -2,8 +2,6 @@
 
 TA-DVFG learns sparse prediction-space collaboration topologies for heterogeneous graph predictors without aligning hidden representations.
 
-![TA-DVFG MovieLens Pareto evidence](figures/ta_dvfg_movielens_pareto.png)
-
 ## Research Question
 
 Can heterogeneous predictors over vertical graph views collaborate without aligning their internal representations?
@@ -17,6 +15,8 @@ TA-DVFG separates training from collaboration:
 3. At inference time, parties exchange compatible class distributions over selected links and aggregate in prediction space.
 
 Hidden representations remain local. Communication uses task-level prediction vectors rather than private hidden states or representation-alignment payloads.
+
+![TA-DVFG method overview](figures/ta_dvfg_overview.png)
 
 ## Main HGB Results
 
@@ -32,19 +32,6 @@ Global Top-k is a centralized participant-selection reference and solves a diffe
 
 TA-DVFG achieves the highest mean among directly comparable peer-to-peer methods across the six HGB settings while selecting only roughly 5-6 links out of 105 possible links.
 
-## Joint Deployment Result
-
-| Dataset   | Method                 |    Active |     Local | Links |
-| --------- | ---------------------- | --------: | --------: | ----: |
-| ACM Hard  | Full Mesh              |     76.14 |     43.07 |   105 |
-| ACM Hard  | **TA-DVFG joint-0.25** | **86.43** | **43.94** | **5** |
-| DBLP Hard | Full Mesh              |     87.44 |     37.73 |   105 |
-| DBLP Hard | **TA-DVFG joint-0.25** | **90.15** | **38.45** | **6** |
-
-In the reported strict label-location setting, the joint-0.25 configuration uses more than 94% less peer communication than Full Mesh.
-
-![TA-DVFG deployment tradeoff](figures/ta_dvfg_deployment_tradeoff.png)
-
 ## MovieLens Result
 
 | Method            |    ROC-AUC | Total communication |
@@ -57,11 +44,32 @@ In the reported strict label-location setting, the joint-0.25 configuration uses
 
 TA-DVFG achieves the highest mean AUC in this comparison while transmitting 68% fewer scalars than Full Mesh. The AUC margin is small, so the result is best interpreted as an accuracy-communication trade-off rather than a large predictive improvement.
 
-## Mechanism Evidence
+![TA-DVFG MovieLens evidence](figures/ta_dvfg_movielens_evidence.png)
+
+The tracked source contains the MovieLens Pareto panel and the individual predictor validation/test panel as separate manuscript assets. The README displays the Pareto panel because no combined original figure asset was found.
+
+## Joint Deployment Result
+
+| Dataset   | Method                 |    Active |     Local | Links |
+| --------- | ---------------------- | --------: | --------: | ----: |
+| ACM Hard  | Full Mesh              |     76.14 |     43.07 |   105 |
+| ACM Hard  | **TA-DVFG joint-0.25** | **86.43** | **43.94** | **5** |
+| DBLP Hard | Full Mesh              |     87.44 |     37.73 |   105 |
+| DBLP Hard | **TA-DVFG joint-0.25** | **90.15** | **38.45** | **6** |
+
+In the reported strict label-location setting, the joint-0.25 configuration uses more than 94% less peer communication than Full Mesh.
+
+![TA-DVFG mechanism and deployment evidence](figures/ta_dvfg_mechanism_deployment.png)
+
+## Privacy Boundary
+
+TA-DVFG's collaboration interface is prediction-space communication: selected peers exchange class distributions rather than raw graph views, features, adjacency matrices, labels, or hidden representations. This README describes the experimental protocol; it is not a formal privacy guarantee.
+
+## Additional Analysis
 
 ![TA-DVFG topology objective ablation](figures/ta_dvfg_topology_objective_ablation.pdf)
 
-Mechanism and deployment studies test whether the selected sparse topology reflects more than a dense communication budget. The reproducibility files map each table and figure to raw outputs, summaries, scripts, and validation commands.
+The topology-objective ablation is retained as additional mechanism evidence rather than the first visual in the public narrative. The reproducibility files map each table and figure to raw outputs, summaries, scripts, and validation commands.
 
 ## Reproduction
 
