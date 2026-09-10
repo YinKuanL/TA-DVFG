@@ -1,9 +1,14 @@
-# TA-DVFG
+# TA-DVFG: Sparse Prediction Topology Learning
 
-TA-DVFG learns a sparse party-to-party prediction topology and a topology-aware readout over
-independently trained local predictors. The repository contains the HGB and
-MovieLens experiment implementations, cached-output analyses, mechanism audits,
-statistical reporting, and the canonical AAAI paper sources.
+TA-DVFG studies whether heterogeneous graph predictors can collaborate through sparse prediction exchange without representation alignment.
+
+## Research question
+
+When parties train local graph predictors over different feature or view partitions, can they improve downstream prediction by exchanging only task-level predictions over a learned sparse topology?
+
+## Core method
+
+TA-DVFG learns a sparse party-to-party prediction topology and a topology-aware readout over independently trained local predictors. The repository contains the HGB and MovieLens experiment implementations, cached-output analyses, mechanism audits, statistical reporting, and protected paper sources.
 
 TA-DVFG is an **inference-stage topology/readout mechanism**. It does not align
 or fuse private hidden representations and the selector does not back-propagate
@@ -37,7 +42,7 @@ information, so the boundary is neither cryptographic nor differential-private.
 | `scripts/` | Coverage, value verification, cached regeneration and package building |
 | `environment/` | Recorded experiment-system and package-version evidence |
 | `docs/` | Inventory, supplement map, crosswalk, provenance and cleanup report |
-| `paper/source/` | Canonical protected main paper, supplement and checklist |
+| `paper/source/` | Protected main paper, supplement and checklist sources |
 
 ## Install
 
@@ -100,15 +105,14 @@ Generated HGB tables/figures go to the selected `--output-dir`. MovieLens derive
 files are written beside the existing leakage-safe raw output. Protected paper
 figures are never overwritten by the cleanup workflow.
 
-## Build the AAAI code package
+## Build the reproducibility package
 
 ```bash
 python scripts/build_reproducibility_package.py
 ```
 
-The build writes
-`dist/aaai27_all_experiments_code/TA-DVFG_AAAI27_All_Experiments_Code.zip`
-together with `MANIFEST.txt` and `SHA256SUMS.txt`. The builder excludes datasets, large caches,
+The build writes a local reproducibility archive under `dist/` together with
+`MANIFEST.txt` and `SHA256SUMS.txt`. The builder excludes datasets, large caches,
 credentials, local paths, paper drafts, histories, logs and generated Python
 caches, then runs the supplement coverage audit against the staged package.
 
@@ -124,7 +128,6 @@ details are in `environment/`.
 
 ## Citation and license
 
-Citation metadata is provided in `CITATION.cff`. The manuscript is currently an
-anonymous submission. No repository license was present in the source history;
-users must treat the code as all-rights-reserved until the authors choose and add
-an explicit license.
+Citation metadata is provided in `CITATION.cff` without author-identifying
+details. No repository license was present in the source history; users must
+treat the code as all-rights-reserved until an explicit license is added.
