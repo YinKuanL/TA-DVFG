@@ -15,6 +15,21 @@ are not copied back into raw result files. Paths under ignored `results/` and
 | Figure `fig:mechanism-deployment` | deployment objective + mechanism evidence | `results/deployment_objective_runs/**/metrics.csv`, mechanism task CSV | `deployment_objective_analysis.py`, `final_analysis.py` | `topology_objective_ablation.pdf`, `deployment_tradeoff.png` | 42--46; active/local objective tradeoff | regenerate to staging and compare values |
 | Figure `fig:overview` | unknown | missing | unknown | `paper/source/figures/method_overview.png` | not numerical | **missing at inventory time** |
 
+## README staging figures and tables
+
+The `staging/results-readme` branch curates a compact public README from the current manuscript source of truth without publishing the manuscript PDF.
+
+| README artifact | Source |
+|---|---|
+| HGB main table | Manuscript-provided `tab:hgb-main` values copied without recomputation or rounding changes |
+| Joint deployment table | Manuscript-provided active/local/link values copied without recomputation or rounding changes |
+| MovieLens table | Manuscript-provided MovieLens ROC-AUC and communication values copied without recomputation or rounding changes |
+| `figures/ta_dvfg_movielens_pareto.png` | Copied from `paper/source/figures/movielens_pareto_auc_communication.png` |
+| `figures/ta_dvfg_deployment_tradeoff.png` | Copied from `paper/source/figures/deployment_tradeoff.png` |
+| `figures/ta_dvfg_topology_objective_ablation.pdf` | Copied from `paper/source/figures/topology_objective_ablation.pdf` |
+
+No dataset, checkpoint, cache, generated result directory, package archive, or manuscript PDF is added by the README staging branch.
+
 ## Supplement tables and figures
 
 | Label | Script / configuration | Raw input | Summary | Expected output / reported values | Validation |
