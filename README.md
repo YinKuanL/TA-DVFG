@@ -2,25 +2,24 @@
 
 TA-DVFG learns sparse prediction-space collaboration topologies for heterogeneous graph predictors without aligning hidden representations.
 
-## Research Question
+## Method Overview
 
-Can heterogeneous predictors over vertical graph views collaborate without aligning their internal representations?
+Each party trains a local graph-view predictor, then a validation-assisted selector learns a sparse prediction topology. At inference time, selected peers exchange compatible class distributions and aggregate in prediction space, while hidden representations, graph views, adjacency matrices, features, and labels remain local to each party.
 
-## Method
+![TA-DVFG method overview](results/figures/method_overview.png)
 
-TA-DVFG separates training from collaboration:
+## Key Results
 
-1. Each party independently trains a local graph-view predictor.
-2. A validation-assisted selector learns a sparse prediction topology.
-3. At inference time, parties exchange compatible class distributions over selected links and aggregate in prediction space.
+Across the six HGB settings reported in the manuscript, TA-DVFG has the highest mean among directly comparable peer-to-peer methods while selecting only roughly 5-6 links out of 105 possible links. On MovieLens, TA-DVFG reports the highest mean ROC-AUC in the comparison while transmitting 68% fewer scalars than Full Mesh; that result is best read as an accuracy-communication trade-off rather than a large predictive-margin claim.
 
-Hidden representations remain local. Communication uses task-level prediction vectors rather than private hidden states or representation-alignment payloads.
+The machine-readable tables are tracked under [results/tables/](results/tables/):
 
-![TA-DVFG method overview](figures/ta_dvfg_overview.png)
+- [hgb_main_results.csv](results/tables/hgb_main_results.csv)
+- [movielens_results.csv](results/tables/movielens_results.csv)
+- [joint_deployment_results.csv](results/tables/joint_deployment_results.csv)
+- [k_sensitivity_summary.csv](results/tables/k_sensitivity_summary.csv)
 
-## Main HGB Results
-
-Global Top-k is a centralized participant-selection reference and solves a different deployment problem. TA-DVFG should be read primarily against the directly comparable peer-to-peer methods.
+## Main Result Table
 
 | Method                   |         ACM Main |         ACM Hard |        DBLP Main |        DBLP Hard |        IMDB Main |        IMDB Hard |
 | ------------------------ | ---------------: | ---------------: | ---------------: | ---------------: | ---------------: | ---------------: |
@@ -30,71 +29,41 @@ Global Top-k is a centralized participant-selection reference and solves a diffe
 | Adaptive Complementarity |     85.86 ± 1.77 |     76.74 ± 5.19 |     90.69 ± 0.53 |     87.32 ± 1.60 |     28.51 ± 0.89 |     28.87 ± 1.18 |
 | **TA-DVFG**              | **89.52 ± 1.71** | **85.54 ± 2.91** | **91.50 ± 1.37** | **90.25 ± 1.14** | **38.65 ± 0.86** | **30.08 ± 0.97** |
 
-TA-DVFG achieves the highest mean among directly comparable peer-to-peer methods across the six HGB settings while selecting only roughly 5-6 links out of 105 possible links.
+## Main Figures
 
-## MovieLens Result
-
-| Method            |    ROC-AUC | Total communication |
-| ----------------- | ---------: | ------------------: |
-| Best Single       |     0.7402 |                   0 |
-| Global Top-k      |     0.7487 |               0.80M |
-| Adaptive Pairwise |     0.7510 |               5.20M |
-| Full Mesh         |     0.7497 |              10.00M |
-| **TA-DVFG**       | **0.7516** |           **3.20M** |
-
-TA-DVFG achieves the highest mean AUC in this comparison while transmitting 68% fewer scalars than Full Mesh. The AUC margin is small, so the result is best interpreted as an accuracy-communication trade-off rather than a large predictive improvement.
+MovieLens evidence:
 
 <p>
-  <img src="figures/ta_dvfg_movielens_auc_communication.png" alt="MovieLens AUC-communication trade-off" width="49%">
-  <img src="figures/ta_dvfg_movielens_party_val_test_auc.png" alt="MovieLens individual predictor validation and test performance" width="49%">
+  <img src="results/figures/movielens_auc_communication.png" alt="MovieLens AUC-communication trade-off" width="49%">
+  <img src="results/figures/movielens_party_val_test_auc.png" alt="MovieLens individual predictor validation and test performance" width="49%">
 </p>
 
-These are the two original panels used for the manuscript MovieLens evidence figure: AUC-communication trade-off and individual predictor validation/test performance. Neither standalone panel is described as the complete figure by itself.
-
-## Joint Deployment Result
-
-| Dataset   | Method                 |    Active |     Local | Links |
-| --------- | ---------------------- | --------: | --------: | ----: |
-| ACM Hard  | Full Mesh              |     76.14 |     43.07 |   105 |
-| ACM Hard  | **TA-DVFG joint-0.25** | **86.43** | **43.94** | **5** |
-| DBLP Hard | Full Mesh              |     87.44 |     37.73 |   105 |
-| DBLP Hard | **TA-DVFG joint-0.25** | **90.15** | **38.45** | **6** |
-
-In the reported strict label-location setting, the joint-0.25 configuration uses more than 94% less peer communication than Full Mesh.
+Mechanism and deployment evidence:
 
 <p>
-  <img src="figures/ta_dvfg_topology_objective_ablation.pdf" alt="Topology-objective mechanism ablation" width="45%">
-  <img src="figures/ta_dvfg_deployment_objective_tradeoff.png" alt="Deployment-objective trade-off" width="49%">
+  <img src="results/figures/topology_objective_ablation.pdf" alt="Topology-objective mechanism ablation" width="45%">
+  <img src="results/figures/deployment_objective_tradeoff.png" alt="Deployment-objective trade-off" width="49%">
 </p>
 
-The left panel compares topology objectives; the right panel is the deployment-objective trade-off for ACM Hard and DBLP Hard. Together they match the manuscript mechanism/deployment figure composition.
+The MovieLens panels are the two original panels used for the manuscript MovieLens evidence figure. The mechanism/deployment panels show the topology-objective ablation and the active/local deployment-objective trade-off.
 
-## Privacy Boundary
+## Key Findings
 
-TA-DVFG's collaboration interface is prediction-space communication: selected peers exchange class distributions rather than raw graph views, features, adjacency matrices, labels, or hidden representations. This README describes the experimental protocol; it is not a formal privacy guarantee.
-
-## Additional Analysis
-
-The topology-objective ablation is retained as mechanism evidence and is shown above with the deployment panel. The reproducibility files map each table and figure to raw outputs, summaries, scripts, and validation commands.
+- TA-DVFG is competitive with the centralized Global Top-k reference while solving a peer-to-peer deployment problem.
+- Sparse prediction-space links recover most of the collaborative gain of denser prediction exchange in the reported HGB and MovieLens settings.
+- The joint deployment objective preserves local-party performance while substantially reducing peer communication in the reported ACM Hard and DBLP Hard strict label-location setting.
 
 ## Reproduction
-
-Install dependencies:
 
 ```bash
 python -m venv .venv
 python -m pip install -r requirements.txt
-```
-
-Lightweight validation:
-
-```bash
 python -m pytest tests/unit tests/smoke -q
 python scripts/verify_reported_values.py
 python scripts/verify_supplement_coverage.py
 ```
 
-Full experiment instructions are separated into no-rerun, lightweight, and full-rerun levels in [REPRODUCE.md](REPRODUCE.md).
+Full experiment instructions are separated into no-rerun, lightweight, and full-rerun levels in [REPRODUCE.md](REPRODUCE.md). Datasets, large caches, generated runs, logs, and package archives are intentionally excluded from Git.
 
 ## Repository Structure
 
@@ -105,13 +74,14 @@ Full experiment instructions are separated into no-rerun, lightweight, and full-
 | `experiments/` | HGB, MovieLens, scaling, sensitivity, alignment, and analysis runners |
 | `analysis/` | Mechanism and provenance audit entry points |
 | `configs/`, `metadata/` | Audited experiment manifests and paper values |
+| `results/tables/` | Curated machine-readable result tables |
+| `results/figures/` | Curated manuscript-aligned README figures |
 | `docs/` | Supplement map, code crosswalk, provenance, and package reports |
-| `figures/` | Curated README figures copied from protected paper figure assets |
 | `tests/`, `scripts/` | Verification, smoke tests, package checks, and regeneration utilities |
 
-## Provenance
+## Result Provenance
 
-See [docs/RESULT_PROVENANCE.md](docs/RESULT_PROVENANCE.md), [docs/SUPPLEMENT_TO_CODE_MAP.md](docs/SUPPLEMENT_TO_CODE_MAP.md), and [docs/PAPER_CODE_CROSSWALK.md](docs/PAPER_CODE_CROSSWALK.md). Datasets, large caches, generated results, logs, and package archives are intentionally excluded from Git.
+See [docs/RESULT_PROVENANCE.md](docs/RESULT_PROVENANCE.md), [docs/SUPPLEMENT_TO_CODE_MAP.md](docs/SUPPLEMENT_TO_CODE_MAP.md), and [docs/PAPER_CODE_CROSSWALK.md](docs/PAPER_CODE_CROSSWALK.md). The CSVs and figures in `results/` are curated public artifacts copied from verified manuscript sources or tracked metadata; bulk raw outputs remain outside Git.
 
 ## Citation and License
 

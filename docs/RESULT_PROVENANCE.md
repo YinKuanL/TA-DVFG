@@ -1,10 +1,24 @@
 # Result Provenance
 
-This map records the current evidence chain. Paper values are authoritative and
-are not copied back into raw result files. Paths under ignored `results/` and
-`outputs/` are source evidence for package construction, not Git-tracked claims.
+This map records the current evidence chain. Paper values are authoritative and are not copied back into raw result files. Paths under ignored bulk output directories are source evidence for package construction, not Git-tracked claims.
 
-## Main paper
+## Curated Public Results
+
+| Artifact | Source | Notes |
+|---|---|---|
+| `results/tables/hgb_main_results.csv` | Manuscript `tab:hgb-main` values and the checked README table | Values copied without recomputation or rounding changes. |
+| `results/tables/movielens_results.csv` | Manuscript MovieLens table values and verified communication totals from tracked metadata | The public table reports the manuscript ROC-AUC values and scalar counts used for the README. |
+| `results/tables/joint_deployment_results.csv` | Manuscript deployment-objective table and supplementary communication decomposition | Includes active/local accuracy, selected links, peer/readout/control scalar counts, and total scalars. |
+| `results/tables/k_sensitivity_summary.csv` | Copied from tracked `metadata/k_sensitivity_summary.csv` | Compact sensitivity summary already present in the clean package. |
+| `results/figures/method_overview.png` | Copied unchanged from `figures/ta_dvfg_overview.png`; originally copied from the local paper-source checkout's `paper/source/figures/method_overview.png` | Manuscript method overview. |
+| `results/figures/movielens_auc_communication.png` | Copied unchanged from `figures/ta_dvfg_movielens_auc_communication.png`; source `paper/source/figures/movielens_pareto_auc_communication.png` | AUC-communication trade-off panel of the manuscript MovieLens evidence figure. |
+| `results/figures/movielens_party_val_test_auc.png` | Copied unchanged from `figures/ta_dvfg_movielens_party_val_test_auc.png`; source `paper/source/figures/movielens_party_val_test_auc.png` | Individual predictor validation/test panel of the manuscript MovieLens evidence figure. |
+| `results/figures/topology_objective_ablation.pdf` | Copied unchanged from `figures/ta_dvfg_topology_objective_ablation.pdf`; source `paper/source/figures/topology_objective_ablation.pdf` | Topology-objective panel of the manuscript mechanism/deployment evidence. |
+| `results/figures/deployment_objective_tradeoff.png` | Copied unchanged from `figures/ta_dvfg_deployment_objective_tradeoff.png`; source `paper/source/figures/deployment_tradeoff.png` | Active/local deployment-objective trade-off panel. |
+
+No dataset, checkpoint, cache, generated result directory, package archive, or manuscript PDF is added by the public-results cleanup.
+
+## Main Paper
 
 | Artifact | Source/config | Raw input | Summary / generator | Expected artifact | Seeds / metric / reported values | Validation |
 |---|---|---|---|---|---|---|
@@ -15,24 +29,7 @@ are not copied back into raw result files. Paths under ignored `results/` and
 | Figure `fig:mechanism-deployment` | deployment objective + mechanism evidence | `results/deployment_objective_runs/**/metrics.csv`, mechanism task CSV | `deployment_objective_analysis.py`, `final_analysis.py` | `topology_objective_ablation.pdf`, `deployment_tradeoff.png` | 42--46; active/local objective tradeoff | regenerate to staging and compare values |
 | Figure `fig:overview` | paper source figure asset | not numerical | manual manuscript figure export | `paper/source/figures/method_overview.png` | not numerical | source asset located in the local paper-source checkout |
 
-## README staging figures and tables
-
-The `staging/results-readme` branch curates a compact public README from the current manuscript source of truth without publishing the manuscript PDF.
-
-| README artifact | Source |
-|---|---|
-| HGB main table | Manuscript-provided `tab:hgb-main` values copied without recomputation or rounding changes |
-| Joint deployment table | Manuscript-provided active/local/link values copied without recomputation or rounding changes |
-| MovieLens table | Manuscript-provided MovieLens ROC-AUC and communication values copied without recomputation or rounding changes |
-| `figures/ta_dvfg_overview.png` | Copied unchanged from the local paper-source checkout's `paper/source/figures/method_overview.png` because the clean package did not track this overview asset |
-| `figures/ta_dvfg_movielens_auc_communication.png` | Copied unchanged from `paper/source/figures/movielens_pareto_auc_communication.png`; this is the AUC-communication trade-off panel of manuscript Figure `fig:movielens-evidence` |
-| `figures/ta_dvfg_movielens_party_val_test_auc.png` | Copied unchanged from `paper/source/figures/movielens_party_val_test_auc.png`; this is the individual predictor validation/test panel of manuscript Figure `fig:movielens-evidence` |
-| `figures/ta_dvfg_topology_objective_ablation.pdf` | Copied from `paper/source/figures/topology_objective_ablation.pdf`; this is the topology-objective left panel of manuscript Figure `fig:mechanism-deployment` |
-| `figures/ta_dvfg_deployment_objective_tradeoff.png` | Copied unchanged from `paper/source/figures/deployment_tradeoff.png`; this is the active/local deployment-objective trade-off right panel of manuscript Figure `fig:mechanism-deployment` |
-
-No dataset, checkpoint, cache, generated result directory, package archive, or manuscript PDF is added by the README staging branch.
-
-## Supplement tables and figures
+## Supplement Tables and Figures
 
 | Label | Script / configuration | Raw input | Summary | Expected output / reported values | Validation |
 |---|---|---|---|---|---|
@@ -41,7 +38,7 @@ No dataset, checkpoint, cache, generated result directory, package archive, or m
 | `tab:supp-subset-baselines` | mechanism task3 generator (not stably tracked initially) | replay bundles | task3 per-seed/stats/report | inline Top-Reliability-q / Greedy-Subset-q | task3 consistency checks + verifier |
 | `tab:supp-degree-decomposition` | mechanism task4 generator (not stably tracked initially) | replay bundles | task4 per-seed/stats/report | inline degree same-state/reselection | task4 consistency checks + verifier |
 | `tab:supp-objective-acm`, `tab:supp-objective-dblp` | `deployment_objective_analysis.py`; objective jobs including lambda .25/.5/.75 | deployment objective metrics CSV | deployment summary CSV | inline active/local/joint metrics | reported-value verifier |
-| `tab:supp-weak-scaling` | `run_nested_weak_scaling.py`; weak 0/2/5/10/15 | `results/nested_weak_cache/{acm,dblp}/*.pt` | expected raw/summary/paired-delta CSV | inline means and link counts | **raw/summary missing initially** |
+| `tab:supp-weak-scaling` | `run_nested_weak_scaling.py`; weak 0/2/5/10/15 | `results/nested_weak_cache/{acm,dblp}/*.pt` | expected raw/summary/paired-delta CSV | inline means and link counts | raw/summary missing initially |
 | `tab:supp-movielens-interfaces` | `models/movielens_parties.py`, architecture audit | MovieLens train data / party specs | party architecture audit CSV | inline five-interface descriptions | static verifier |
 | `tab:supp-movielens-summary` | MovieLens runner | leakage-safe per-seed CSV | summary/Pareto CSV | inline AUC/communication | reported-value verifier |
 | `tab:supp-alignment-acmhard5` | `alignment_references.py` | five fresh frozen ACM Hard caches | alignment per-seed/summary/stats | inline accuracy/F1/CI/p/W-T-L | equivalence and value verifier |
@@ -55,15 +52,10 @@ No dataset, checkpoint, cache, generated result directory, package archive, or m
 | `tab:supp-minlink-audit` | cached min-edge sweep plus first-edge audit | min-edge metrics / replay bundles | min-edge table | inline edge counts and first-edge gain ranges | partial until generator stabilized |
 | `fig:supp-edge-budget` | edge budget jobs; `make_readable_paper_figures.py` | edge budget metrics CSV | final-analysis edge table | protected ACM/DBLP edge PDFs | regenerate to staging |
 
-## Configuration and selection provenance
+## Configuration and Selection Provenance
 
-- HGB headline values: saved `metrics_config.json` is primary; job/command text is
-  secondary; engine CLI defaults are not evidence for historical headline runs.
-- Best epoch: validation improves strictly (`>`); the test prediction from that
-  same epoch is reported. Ties retain the earlier best epoch.
-- Best topology: replayed best-validation state is authoritative. A historical
-  `selected_edges` field stored final/last-refresh edges and is not topology truth.
-- MovieLens: validation selects reliability/topology; test labels are evaluated
-  only after the state is fixed.
+- HGB headline values: saved `metrics_config.json` is primary; job/command text is secondary; engine CLI defaults are not evidence for historical headline runs.
+- Best epoch: validation improves strictly (`>`); the test prediction from that same epoch is reported. Ties retain the earlier best epoch.
+- Best topology: replayed best-validation state is authoritative. A historical `selected_edges` field stored final/last-refresh edges and is not topology truth.
+- MovieLens: validation selects reliability/topology; test labels are evaluated only after the state is fixed.
 - Alignment: fresh hidden-export caches are separate from HGB cached-core caches.
-
