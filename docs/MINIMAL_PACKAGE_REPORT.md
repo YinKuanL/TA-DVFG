@@ -4,8 +4,8 @@ Date: 2026-07-15
 
 ## Deliverable
 
-- Code folder: `C:\Users\Yin Kuan\OneDrive\桌面\Durham_CS\Research\TA-DVFG\dist\aaai27_all_experiments_code\TA-DVFG`
-- ZIP: `C:\Users\Yin Kuan\OneDrive\桌面\Durham_CS\Research\TA-DVFG\dist\aaai27_all_experiments_code\TA-DVFG_AAAI27_All_Experiments_Code.zip`
+- Code folder: `dist/aaai27_all_experiments_code/TA-DVFG`
+- ZIP: `dist/aaai27_all_experiments_code/TA-DVFG_AAAI27_All_Experiments_Code.zip`
 - ZIP SHA-256: `851c32f75118d59445507b9da2e668fd32e4ec45427de48b26af797b37b0b99b`
 - Manifested payload files: 164
 

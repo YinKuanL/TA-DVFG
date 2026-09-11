@@ -3,14 +3,13 @@ message: "If you use this software, please cite the accompanying paper."
 title: "TA-DVFG: Collaboration without Representation Alignment"
 type: software
 authors:
-  - name: "Anonymous Submission"
-repository-code: "https://github.com/YinKuanL/TA-DVFG"
-version: "AAAI-27 submission"
+  - name: "TA-DVFG contributors"
+version: "research artifact"
 date-released: 2026-07-14
 preferred-citation:
   type: conference-paper
   title: "Collaboration without Representation Alignment: Sparse Prediction Topology Learning for Vertical Graph Views"
   authors:
-    - name: "Anonymous Submission"
+    - name: "TA-DVFG contributors"
   year: 2026
 

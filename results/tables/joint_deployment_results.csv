@@ -1,0 +1,5 @@
+dataset,method,objective,active_accuracy_mean,active_accuracy_std,local_accuracy_mean,local_accuracy_std,selected_links_mean,peer_scalars,readout_scalars,control_scalars,total_scalars
+ACM Hard,Full Mesh,active-only,76.14,4.98,43.07,0.89,105,1905750,136125,0,2041875
+ACM Hard,TA-DVFG,joint-0.25,86.43,1.95,43.94,0.33,5,90750,47190,203850,341790
+DBLP Hard,Full Mesh,active-only,87.44,1.74,37.73,0.45,105,3407880,243420,0,3651300
+DBLP Hard,TA-DVFG,joint-0.25,90.15,1.38,38.45,0.42,6,194736,133070,363600,691406
