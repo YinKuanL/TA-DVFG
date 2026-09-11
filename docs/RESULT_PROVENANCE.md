@@ -25,9 +25,10 @@ The `staging/results-readme` branch curates a compact public README from the cur
 | Joint deployment table | Manuscript-provided active/local/link values copied without recomputation or rounding changes |
 | MovieLens table | Manuscript-provided MovieLens ROC-AUC and communication values copied without recomputation or rounding changes |
 | `figures/ta_dvfg_overview.png` | Copied unchanged from the local paper-source checkout's `paper/source/figures/method_overview.png` because the clean package did not track this overview asset |
-| `figures/ta_dvfg_movielens_evidence.png` | Copied unchanged from `paper/source/figures/movielens_pareto_auc_communication.png`; the companion source panel `paper/source/figures/movielens_party_val_test_auc.png` remains tracked separately, and no combined original asset was found |
-| `figures/ta_dvfg_mechanism_deployment.png` | Copied unchanged from `paper/source/figures/deployment_tradeoff.png` |
-| `figures/ta_dvfg_topology_objective_ablation.pdf` | Copied from `paper/source/figures/topology_objective_ablation.pdf` |
+| `figures/ta_dvfg_movielens_auc_communication.png` | Copied unchanged from `paper/source/figures/movielens_pareto_auc_communication.png`; this is the AUC-communication trade-off panel of manuscript Figure `fig:movielens-evidence` |
+| `figures/ta_dvfg_movielens_party_val_test_auc.png` | Copied unchanged from `paper/source/figures/movielens_party_val_test_auc.png`; this is the individual predictor validation/test panel of manuscript Figure `fig:movielens-evidence` |
+| `figures/ta_dvfg_topology_objective_ablation.pdf` | Copied from `paper/source/figures/topology_objective_ablation.pdf`; this is the topology-objective left panel of manuscript Figure `fig:mechanism-deployment` |
+| `figures/ta_dvfg_deployment_objective_tradeoff.png` | Copied unchanged from `paper/source/figures/deployment_tradeoff.png`; this is the active/local deployment-objective trade-off right panel of manuscript Figure `fig:mechanism-deployment` |
 
 No dataset, checkpoint, cache, generated result directory, package archive, or manuscript PDF is added by the README staging branch.
 

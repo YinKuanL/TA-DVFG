@@ -44,9 +44,12 @@ TA-DVFG achieves the highest mean among directly comparable peer-to-peer methods
 
 TA-DVFG achieves the highest mean AUC in this comparison while transmitting 68% fewer scalars than Full Mesh. The AUC margin is small, so the result is best interpreted as an accuracy-communication trade-off rather than a large predictive improvement.
 
-![TA-DVFG MovieLens evidence](figures/ta_dvfg_movielens_evidence.png)
+<p>
+  <img src="figures/ta_dvfg_movielens_auc_communication.png" alt="MovieLens AUC-communication trade-off" width="49%">
+  <img src="figures/ta_dvfg_movielens_party_val_test_auc.png" alt="MovieLens individual predictor validation and test performance" width="49%">
+</p>
 
-The tracked source contains the MovieLens Pareto panel and the individual predictor validation/test panel as separate manuscript assets. The README displays the Pareto panel because no combined original figure asset was found.
+These are the two original panels used for the manuscript MovieLens evidence figure: AUC-communication trade-off and individual predictor validation/test performance. Neither standalone panel is described as the complete figure by itself.
 
 ## Joint Deployment Result
 
@@ -59,7 +62,12 @@ The tracked source contains the MovieLens Pareto panel and the individual predic
 
 In the reported strict label-location setting, the joint-0.25 configuration uses more than 94% less peer communication than Full Mesh.
 
-![TA-DVFG mechanism and deployment evidence](figures/ta_dvfg_mechanism_deployment.png)
+<p>
+  <img src="figures/ta_dvfg_topology_objective_ablation.pdf" alt="Topology-objective mechanism ablation" width="45%">
+  <img src="figures/ta_dvfg_deployment_objective_tradeoff.png" alt="Deployment-objective trade-off" width="49%">
+</p>
+
+The left panel compares topology objectives; the right panel is the deployment-objective trade-off for ACM Hard and DBLP Hard. Together they match the manuscript mechanism/deployment figure composition.
 
 ## Privacy Boundary
 
@@ -67,9 +75,7 @@ TA-DVFG's collaboration interface is prediction-space communication: selected pe
 
 ## Additional Analysis
 
-![TA-DVFG topology objective ablation](figures/ta_dvfg_topology_objective_ablation.pdf)
-
-The topology-objective ablation is retained as additional mechanism evidence rather than the first visual in the public narrative. The reproducibility files map each table and figure to raw outputs, summaries, scripts, and validation commands.
+The topology-objective ablation is retained as mechanism evidence and is shown above with the deployment panel. The reproducibility files map each table and figure to raw outputs, summaries, scripts, and validation commands.
 
 ## Reproduction
 
