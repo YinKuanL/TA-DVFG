@@ -11,6 +11,12 @@ data_hgb/
 data_acm/
 outputs/
 results/
+!results/
+results/*
+!results/tables/
+!results/tables/**
+!results/figures/
+!results/figures/**
 dist/
 artifacts/regenerated/
 *.pt
