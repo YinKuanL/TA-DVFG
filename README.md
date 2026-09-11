@@ -1,133 +1,118 @@
-# TA-DVFG: Sparse Prediction Topology Learning
+# TA-DVFG
 
-TA-DVFG studies whether heterogeneous graph predictors can collaborate through sparse prediction exchange without representation alignment.
+TA-DVFG learns sparse prediction-space collaboration topologies for heterogeneous graph predictors without aligning hidden representations.
 
-## Research question
+## Research Question
 
-When parties train local graph predictors over different feature or view partitions, can they improve downstream prediction by exchanging only task-level predictions over a learned sparse topology?
+Can heterogeneous predictors over vertical graph views collaborate without aligning their internal representations?
 
-## Core method
+## Method
 
-TA-DVFG learns a sparse party-to-party prediction topology and a topology-aware readout over independently trained local predictors. The repository contains the HGB and MovieLens experiment implementations, cached-output analyses, mechanism audits, statistical reporting, and protected paper sources.
+TA-DVFG separates training from collaboration:
 
-TA-DVFG is an **inference-stage topology/readout mechanism**. It does not align
-or fuse private hidden representations and the selector does not back-propagate
-into independently trained local predictors.
+1. Each party independently trains a local graph-view predictor.
+2. A validation-assisted selector learns a sparse prediction topology.
+3. At inference time, parties exchange compatible class distributions over selected links and aggregate in prediction space.
 
-## Information and privacy boundaries
+Hidden representations remain local. Communication uses task-level prediction vectors rather than private hidden states or representation-alignment payloads.
 
-Parties exchange task-level prediction vectors. Hidden states are not required.
-Active topology selection is centralized at a low-frequency evaluator using
-held-out validation predictions. Deployment consensus is sparse peer-to-peer
-over the selected links. An active readout may collect the post-consensus
-predictions that it consumes; a party-local readout needs no global collection.
+![TA-DVFG method overview](figures/ta_dvfg_overview.png)
 
-The code provides no formal privacy guarantee. The strict label-location variant
-is an API-separation protocol: passive parties submit logits and receive logit
-gradients without directly receiving labels. Those gradients may reveal label
-information, so the boundary is neither cryptographic nor differential-private.
+## Main HGB Results
 
-## Repository map
+Global Top-k is a centralized participant-selection reference and solves a different deployment problem. TA-DVFG should be read primarily against the directly comparable peer-to-peer methods.
 
-| Path | Contents |
-|---|---|
-| `core/ta_dvfg_hgb_reliability.py` (package) | Preserved HGB engine: parties, caches, consensus, topology, readouts, communication |
-| `models/` | MovieLens party predictor implementations |
-| `experiments/` | HGB, MovieLens, nested scaling, K sensitivity, alignment and analysis runners |
-| `analysis/` | Stable entry points for provenance and mechanism audits |
-| `configs/` | Machine-readable audited experiment manifests |
-| `metadata/` | Tracked paper values and headline configuration audits |
-| `results/`, `outputs/` | Local ignored raw results, summaries and large caches |
-| `tests/` | Deterministic unit, regression and smoke tests |
-| `scripts/` | Coverage, value verification, cached regeneration and package building |
-| `environment/` | Recorded experiment-system and package-version evidence |
-| `docs/` | Inventory, supplement map, crosswalk, provenance and cleanup report |
-| `paper/source/` | Protected main paper, supplement and checklist sources |
+| Method                   |         ACM Main |         ACM Hard |        DBLP Main |        DBLP Hard |        IMDB Main |        IMDB Hard |
+| ------------------------ | ---------------: | ---------------: | ---------------: | ---------------: | ---------------: | ---------------: |
+| Global Top-k             |     89.82 ± 1.01 |     85.50 ± 2.78 |     91.43 ± 0.65 |     90.57 ± 1.04 |     39.27 ± 0.87 |     30.44 ± 0.92 |
+| Full Mesh                |     85.96 ± 2.30 |     75.52 ± 5.04 |     90.86 ± 0.49 |     88.01 ± 1.45 |     28.49 ± 0.77 |     29.03 ± 1.33 |
+| Adaptive Pairwise        |     86.56 ± 2.46 |     76.41 ± 4.57 |     90.96 ± 0.52 |     87.91 ± 1.34 |     28.71 ± 0.59 |     29.19 ± 1.30 |
+| Adaptive Complementarity |     85.86 ± 1.77 |     76.74 ± 5.19 |     90.69 ± 0.53 |     87.32 ± 1.60 |     28.51 ± 0.89 |     28.87 ± 1.18 |
+| **TA-DVFG**              | **89.52 ± 1.71** | **85.54 ± 2.91** | **91.50 ± 1.37** | **90.25 ± 1.14** | **38.65 ± 0.86** | **30.08 ± 0.97** |
 
-## Install
+TA-DVFG achieves the highest mean among directly comparable peer-to-peer methods across the six HGB settings while selecting only roughly 5-6 links out of 105 possible links.
 
-Python 3.14 was used for the reported experiments. A clean CPU environment can
-be prepared with:
+## MovieLens Result
+
+| Method            |    ROC-AUC | Total communication |
+| ----------------- | ---------: | ------------------: |
+| Best Single       |     0.7402 |                   0 |
+| Global Top-k      |     0.7487 |               0.80M |
+| Adaptive Pairwise |     0.7510 |               5.20M |
+| Full Mesh         |     0.7497 |              10.00M |
+| **TA-DVFG**       | **0.7516** |           **3.20M** |
+
+TA-DVFG achieves the highest mean AUC in this comparison while transmitting 68% fewer scalars than Full Mesh. The AUC margin is small, so the result is best interpreted as an accuracy-communication trade-off rather than a large predictive improvement.
+
+<p>
+  <img src="figures/ta_dvfg_movielens_auc_communication.png" alt="MovieLens AUC-communication trade-off" width="49%">
+  <img src="figures/ta_dvfg_movielens_party_val_test_auc.png" alt="MovieLens individual predictor validation and test performance" width="49%">
+</p>
+
+These are the two original panels used for the manuscript MovieLens evidence figure: AUC-communication trade-off and individual predictor validation/test performance. Neither standalone panel is described as the complete figure by itself.
+
+## Joint Deployment Result
+
+| Dataset   | Method                 |    Active |     Local | Links |
+| --------- | ---------------------- | --------: | --------: | ----: |
+| ACM Hard  | Full Mesh              |     76.14 |     43.07 |   105 |
+| ACM Hard  | **TA-DVFG joint-0.25** | **86.43** | **43.94** | **5** |
+| DBLP Hard | Full Mesh              |     87.44 |     37.73 |   105 |
+| DBLP Hard | **TA-DVFG joint-0.25** | **90.15** | **38.45** | **6** |
+
+In the reported strict label-location setting, the joint-0.25 configuration uses more than 94% less peer communication than Full Mesh.
+
+<p>
+  <img src="figures/ta_dvfg_topology_objective_ablation.pdf" alt="Topology-objective mechanism ablation" width="45%">
+  <img src="figures/ta_dvfg_deployment_objective_tradeoff.png" alt="Deployment-objective trade-off" width="49%">
+</p>
+
+The left panel compares topology objectives; the right panel is the deployment-objective trade-off for ACM Hard and DBLP Hard. Together they match the manuscript mechanism/deployment figure composition.
+
+## Privacy Boundary
+
+TA-DVFG's collaboration interface is prediction-space communication: selected peers exchange class distributions rather than raw graph views, features, adjacency matrices, labels, or hidden representations. This README describes the experimental protocol; it is not a formal privacy guarantee.
+
+## Additional Analysis
+
+The topology-objective ablation is retained as mechanism evidence and is shown above with the deployment panel. The reproducibility files map each table and figure to raw outputs, summaries, scripts, and validation commands.
+
+## Reproduction
+
+Install dependencies:
 
 ```bash
 python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-The complete recorded package snapshot is in `environment/package_versions.txt`.
-HGB full reruns additionally require the PyTorch Geometric HGB datasets;
-MovieLens full reruns require the GroupLens MovieLens 1M files. Datasets are not
-redistributed here.
-
-## Quick validation
-
-No dataset or GPU is needed for the lightweight suite:
+Lightweight validation:
 
 ```bash
 python -m pytest tests/unit tests/smoke -q
-```
-
-Run all lightweight checks and coverage/value audits with:
-
-```bash
-python scripts/verify_supplement_coverage.py
 python scripts/verify_reported_values.py
+python scripts/verify_supplement_coverage.py
 ```
 
-## Reproduction entry points
+Full experiment instructions are separated into no-rerun, lightweight, and full-rerun levels in [REPRODUCE.md](REPRODUCE.md).
 
-| Supplement area | Entry point |
+## Repository Structure
+
+| Path | Contents |
 |---|---|
-| HGB cached core and comparisons | `experiments/run_cached_core.py`, `experiments/experiment_plan.py` |
-| Same-state peer exchange | `analysis/mechanisms/run_peer_exchange_audit.py` |
-| Topology/Test@BestVal provenance | `analysis/provenance/run_topology_provenance.py`, `run_testatbestval_replay.py` |
-| Deployment objectives | `experiments/deployment_objective_analysis.py` |
-| Nested weak-party scaling | `experiments/run_nested_weak_scaling.py` |
-| MovieLens | `experiments/movielens/run_movielens_tadvfg.py` |
-| Latent-alignment reference | `experiments/alignment_references.py` |
-| K-hop sensitivity | `experiments/run_k_sensitivity.py` |
-| Statistics, HGB tables and figures | `experiments/statistical_tests.py`, `experiments/final_analysis.py` |
+| `core/`, `main experiment/` | Preserved HGB engine and core TA-DVFG implementation |
+| `models/` | MovieLens party predictors |
+| `experiments/` | HGB, MovieLens, scaling, sensitivity, alignment, and analysis runners |
+| `analysis/` | Mechanism and provenance audit entry points |
+| `configs/`, `metadata/` | Audited experiment manifests and paper values |
+| `docs/` | Supplement map, code crosswalk, provenance, and package reports |
+| `figures/` | Curated README figures copied from protected paper figure assets |
+| `tests/`, `scripts/` | Verification, smoke tests, package checks, and regeneration utilities |
 
-Exact code/output mappings and coverage statuses are in
-`docs/SUPPLEMENT_TO_CODE_MAP.md` and `docs/RESULT_PROVENANCE.md`.
+## Provenance
 
-## Regenerate from existing outputs
+See [docs/RESULT_PROVENANCE.md](docs/RESULT_PROVENANCE.md), [docs/SUPPLEMENT_TO_CODE_MAP.md](docs/SUPPLEMENT_TO_CODE_MAP.md), and [docs/PAPER_CODE_CROSSWALK.md](docs/PAPER_CODE_CROSSWALK.md). Datasets, large caches, generated results, logs, and package archives are intentionally excluded from Git.
 
-These commands do not train local predictors:
+## Citation and License
 
-```bash
-python experiments/final_analysis.py --results-root results --output-dir artifacts/regenerated/hgb
-python experiments/deployment_objective_analysis.py --input-root results/deployment_objective_runs --output-dir artifacts/regenerated/deployment
-python experiments/movielens/extended_movielens_suite.py --output-dir outputs/movielens_leakage_safe_20260705
-```
-
-Generated HGB tables/figures go to the selected `--output-dir`. MovieLens derived
-files are written beside the existing leakage-safe raw output. Protected paper
-figures are never overwritten by the cleanup workflow.
-
-## Build the reproducibility package
-
-```bash
-python scripts/build_reproducibility_package.py
-```
-
-The build writes a local reproducibility archive under `dist/` together with
-`MANIFEST.txt` and `SHA256SUMS.txt`. The builder excludes datasets, large caches,
-credentials, local paths, paper drafts, histories, logs and generated Python
-caches, then runs the supplement coverage audit against the staged package.
-
-See `REPRODUCE.md` for no-rerun, lightweight and full-experiment levels,
-prerequisites, expected locations and runtime boundaries.
-
-## Hardware and software
-
-The reported runs used Windows 11, an Intel i7-12700H with 31.64 GiB RAM, and a
-CPU-only PyTorch 2.12.1 build. Although the host contained an RTX 4060 Laptop GPU
-and CUDA 12.6 toolkit, CUDA was unavailable to that PyTorch build. Exact recorded
-details are in `environment/`.
-
-## Citation and license
-
-Citation metadata is provided in `CITATION.cff` without author-identifying
-details. No repository license was present in the source history; users must
-treat the code as all-rights-reserved until an explicit license is added.
+Author-identifying citation metadata and publication-status wording are intentionally omitted while this artifact may be used in anonymous review. No repository license was present in the source history; treat the code as all-rights-reserved until an explicit license is added.
