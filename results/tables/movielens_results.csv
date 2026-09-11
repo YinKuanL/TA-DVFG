@@ -1,0 +1,6 @@
+method,roc_auc,total_communication_scalars,total_communication_millions
+Best Single,0.7402,0,0.00
+Global Top-k,0.7487,800168,0.80
+Adaptive Pairwise,0.7510,5201092,5.20
+Full Mesh,0.7497,10002100,10.00
+TA-DVFG,0.7516,3200672,3.20
